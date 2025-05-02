@@ -1,0 +1,8 @@
+# Igore OS files #
+.DS_Store
+
+# Ignore data #
+Data/
+
+# Ignore debugging notebooks #
+.ipynb
