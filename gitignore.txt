@@ -1,0 +1,2 @@
+# Igore OS files #
+.DS_Store
