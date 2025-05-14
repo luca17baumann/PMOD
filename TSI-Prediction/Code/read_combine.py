@@ -8,12 +8,12 @@ from utils import *
 
 ## HYPERPARAMETERS ################################################################################
 
-SOURCE_L1_PATH = 'dummy'
-SOURCE_L2_PATH = 'dummy'
+SOURCE_L1_PATH = '/Users/luca/Desktop/Internship/PMOD/TSI-Prediction/Data/Level1A'
+SOURCE_L2_PATH = '/Users/luca/Desktop/Internship/PMOD/TSI-Prediction/Data/Level2A'
 
-PATH_FEATURES = '/Users/juliabarth/Desktop/DSLab/combined_CLARA_all.pkl'
+PATH_FEATURES = '/Users/luca/Desktop/Internship/PMOD/TSI-Prediction/Data/features.txt'
 
-TARGET_PATH = "combined_data.pkl"
+TARGET_PATH = "/Users/luca/Desktop/Internship/PMOD/TSI-Prediction/Data/combined_data.pkl"
 
 time = "Irradiance TimeJD"
 target = "irradiance_B [W.m-2]"

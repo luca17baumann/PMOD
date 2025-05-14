@@ -10,9 +10,10 @@ from utils import *
 ## HYPERPARAMETER ################################################################################
 
 # Read-in:
-PATH_DATA = '/Users/juliabarth/Desktop/DSLab/combined_CLARA_all.pkl'
-PATH_FEATURES = '/Users/juliabarth/Desktop/DSLab/combined_CLARA_all.pkl'
-TARGET_PATH = '/Users/juliabarth/Desktop/DSLab/'
+PATH_DATA = '/Users/luca/Desktop/Internship/PMOD/TSI-Prediction/Data/combined_data.pkl'
+PATH_FEATURES = '/Users/luca/Desktop/Internship/PMOD/TSI-Prediction/Data/combined_data.pkl'
+TARGET_PATH = '/Users/luca/Desktop/Internship/PMOD/TSI-Prediction/Data/'
+IMAGE_PATH = '/Users/luca/Desktop/Internship/PMOD/TSI-Prediction/Images/'
 
 # Preprocessing:
 OUTLIER_UPPER = 1370
@@ -24,7 +25,7 @@ THRESHOLD = 3
 ## READ-IN #####################################################################################
 
 df = pd.read_pickle(PATH_DATA)
-feature_list = read_file(PATH_FEATURES)
+feature_list = read_pickle(PATH_FEATURES)
 
 missing_features = [feature for feature in feature_list if feature not in df.columns]
 if missing_features:
@@ -92,7 +93,7 @@ for i in range(data.shape[0]):
         ax.text(j, i, "{:.2f}".format(data.iloc[i, j]), ha='center', va='center', color='black', fontsize=6)
 
 # Save plot in the desired folder
-plt.savefig(TARGET_PATH + 'correlation_plot.png')
+plt.savefig(IMAGE_PATH + 'correlation_plot.png')
 
 ################################################################################################
 
@@ -128,7 +129,7 @@ sns.scatterplot(x=df["TimeJD"], y=df["IrrB"], ax = axes[0]).set(title=f'Scatterp
 sns.scatterplot(x=outliers['TimeJD'], y=outliers['IrrB'], ax = axes[1], color='red' )
 
 # Save plot in the desired folder
-plt.savefig(TARGET_PATH + 'outlier_plot.png')
+plt.savefig(IMAGE_PATH + 'outlier_plot.png')
 
 ################################################################################################
 
@@ -146,7 +147,9 @@ selected_gaps = df_train[large_gaps_mask]
 
 # Resample all data and test data
 time_interval = pd.to_timedelta('15 minutes')
+df = df.drop('index',axis = 1)
 df.set_index('TimeJD', inplace=True)
+df_test = df_test.drop('index',axis = 1)
 df_test.set_index('TimeJD', inplace=True)
 df_resampled = df.resample(time_interval).mean().copy()
 
@@ -169,13 +172,14 @@ df_train.drop('gap', axis = 1, inplace = True)
 
 df_resampled = df_resampled.reset_index()
 df_resampled['TimeJD'] = pd.to_datetime(df_resampled['TimeJD'])
+df_test = df_test.reset_index()
 df_test['TimeJD']= pd.to_datetime(df_test['TimeJD'])
 
 ################################################################################################
 
 ## SAVE PREPROCESSED DATA ######################################################################
 
-df_train.to_pickle(TARGET_PATH + 'df_train.pkl', index = False)
-df_test.to_pickle(TARGET_PATH + 'df_test.pkl', index = False)
+df_train.to_pickle(TARGET_PATH + 'df_train.pkl')
+df_test.to_pickle(TARGET_PATH + 'df_test.pkl')
 
 ################################################################################################
