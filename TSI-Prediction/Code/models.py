@@ -14,13 +14,15 @@ import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import Dataset, DataLoader, TensorDataset
 
+# TODO: CHECK PREPROCESSING AGAIN BECAUSE OF INDEX WHICH IS CONTAINED IN TRAIN BUT NOT IN TEST
+
 ## HYPERPARAMETER ################################################################################
 
-PATH_TRAIN = '/Users/juliabarth/Desktop/DSLab/df_train.pkl'
-PATH_TEST = '/Users/juliabarth/Desktop/DSLab/df_test.pkl'
-TARGET_PATH = '/Users/juliabarth/Desktop/DSLab/'
+PATH_TRAIN = '/Users/luca/Desktop/Internship/PMOD/TSI-Prediction/Data/df_train.pkl'
+PATH_TEST = '/Users/luca/Desktop/Internship/PMOD/TSI-Prediction/Data//df_test.pkl'
+TARGET_PATH = '/Users/luca/Desktop/Internship/PMOD/TSI-Prediction//Models/'
 # Setting SPLIT = 0 is equivalent to training on the full data available and filling in the found gaps
-SPLIT = 0.2
+SPLIT = 0
 
 # Network hyperparameters
 input_size = 30
@@ -46,7 +48,7 @@ if SPLIT > 0:
     X_train, X_test, y_train, y_test = train_test_split(X_train, y_train, test_size=0.2, random_state=42, shuffle=False)
 
 else:
-    df_test = read_file(PATH_TEST)
+    df_test = read_pickle(PATH_TEST)
     X_test = df_test.drop(['IrrB', 'TimeJD'], axis = 1) # Features for gaps
 
 ## DATA PREPARATION ############################################################################
