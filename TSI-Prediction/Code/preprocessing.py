@@ -6,8 +6,11 @@ import seaborn as sns
 import random
 import math
 from utils import *
+import time as t
 
 ## HYPERPARAMETER ################################################################################
+
+t0 = t.time()
 
 # Read-in:
 PATH_DATA = '/Users/luca/Desktop/Internship/PMOD/TSI-Prediction/Data/combined_data.pkl'
@@ -147,7 +150,7 @@ selected_gaps = df_train[large_gaps_mask]
 
 # Resample all data and test data
 time_interval = pd.to_timedelta('15 minutes')
-df = df.drop('index',axis = 1)
+df = df.drop('index', axis = 1)
 df.set_index('TimeJD', inplace=True)
 df_test = df_test.drop('index',axis = 1)
 df_test.set_index('TimeJD', inplace=True)
@@ -169,6 +172,7 @@ for index, gap in selected_gaps.iterrows():
 # Reset the index for the final result
 sampled_rows.reset_index(inplace=True)
 df_train.drop('gap', axis = 1, inplace = True)
+df_train.drop('index', axis = 1, inplace = True)
 
 df_resampled = df_resampled.reset_index()
 df_resampled['TimeJD'] = pd.to_datetime(df_resampled['TimeJD'])
@@ -181,5 +185,10 @@ df_test['TimeJD']= pd.to_datetime(df_test['TimeJD'])
 
 df_train.to_pickle(TARGET_PATH + 'df_train.pkl')
 df_test.to_pickle(TARGET_PATH + 'df_test.pkl')
+
+t1 = t.time()
+time_elapsed = t1 - t0
+
+print("Execution time: ", int(time_elapsed / 60), " Minutes ", int(time_elapsed % 60)," Seconds.")
 
 ################################################################################################

@@ -5,6 +5,7 @@ from astropy import units as u
 import pandas as pd
 import os
 from utils import *
+import time as t
 
 ## HYPERPARAMETERS ################################################################################
 
@@ -195,6 +196,7 @@ def main():
     
     # LEFT JOIN (including gap data)
     
+    t0 = t.time()
     features_level_1 = read_file(PATH_FEATURES)
     paths_files_level1 = list_files_in_subfolders(SOURCE_L1_PATH)
     paths_files_level2 = list_files_in_subfolders(SOURCE_L2_PATH)
@@ -207,7 +209,13 @@ def main():
     df_combined = merge_level1_level2(df_level1, df_level2)
     df_combined.to_pickle(TARGET_PATH)
     
+    t1 = t.time()
+    
+    time_elapsed = t1 - t0
+    
     print("Merging: complete. Data file in ", TARGET_PATH)
+    
+    print("Execution time: ", int(time_elapsed / 60), " Minutes ", int(time_elapsed % 60)," Seconds.")
 
 if __name__ == "__main__":
     main()

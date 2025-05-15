@@ -14,8 +14,6 @@ import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import Dataset, DataLoader, TensorDataset
 
-# TODO: CHECK PREPROCESSING AGAIN BECAUSE OF INDEX WHICH IS CONTAINED IN TRAIN BUT NOT IN TEST
-
 ## HYPERPARAMETER ################################################################################
 
 PATH_TRAIN = '/Users/luca/Desktop/Internship/PMOD/TSI-Prediction/Data/df_train.pkl'
@@ -25,11 +23,11 @@ TARGET_PATH = '/Users/luca/Desktop/Internship/PMOD/TSI-Prediction//Models/'
 SPLIT = 0
 
 # Network hyperparameters
-input_size = 30
+input_size = 24
 hidden_size = 128
 output_size = 1
 learning_rate = 3e-3
-num_epochs = 100
+num_epochs = 3#100
 dropout = 0.0
 num_layers = 2
 bidirectional = False
@@ -93,8 +91,8 @@ class test_dataset(Dataset):
 
 torch.manual_seed(42)
 
-train_dataset = train_dataset(X_train, y_train, 16) # 8
-test_dataset = test_dataset(X_test, 16) # 8
+train_dataset = train_dataset(X_train, y_train, 3) # 8
+test_dataset = test_dataset(X_test, 3) # 8
 train_dataloader = DataLoader(train_dataset, batch_size=64, shuffle=True)
 test_dataloader = DataLoader(test_dataset, batch_size=64, shuffle=False)
 
@@ -158,9 +156,12 @@ for epoch in range(num_epochs):
     print('Epoch [{}/{}], Loss: {:.8f}'
           .format(epoch+1, num_epochs, train_loss / len(train_dataloader)))
 
+torch.save(model.state_dict(), TARGET_PATH + 'trained_model.pt')
+print("Model saved as 'trained_model.pt'")
+
 # Set the model to evaluation mode
 model.eval()
-0
+
 # Generate predictions for the test dataset
 predictions = []
 with torch.no_grad():
@@ -170,10 +171,11 @@ with torch.no_grad():
         predictions += outputs.squeeze().tolist()
 
 # Bring back to original scale
+predictions = np.array(predictions).reshape(-1, 1)  # Reshape to 2D array
 predictions = scaler_y.inverse_transform(predictions)
 
 # Save outputs in desired folder
-predictions.to_csv(TARGET_PATH + 'predicted_data.csv', index = False)
+pd.DataFrame(predictions, columns=["Predicted"]).to_csv(TARGET_PATH + 'predicted_data.csv', index=False)
 
 ################################################################################################
 
@@ -185,7 +187,10 @@ time_test = np.array(df_test['TimeJD'])
 
 # Make sure the plotted data is in the original scale
 irr_train = np.array(scaler_y.inverse_transform(y_train)).ravel()
-irr_test = np.array(predictions)
+irr_test = np.array(predictions).flatten()
+
+print("Shape of time_test:", time_test.shape)
+print("Shape of irr_test:", irr_test.shape)
 
 # Create a single scatter plot with overlapping data points
 plt.figure(figsize=(30, 6))
