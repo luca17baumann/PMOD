@@ -9,8 +9,8 @@ import time as t
 
 ## HYPERPARAMETERS ################################################################################
 
-SOURCE_L1_PATH = '/Users/luca/Desktop/Internship/PMOD/TSI-Prediction/Data/Level1A'
-SOURCE_L2_PATH = '/Users/luca/Desktop/Internship/PMOD/TSI-Prediction/Data/Level2A'
+SOURCE_L1_PATH = '/Users/luca/../../Volumes/16_Flight_Data/Gap Filling Data/Level1A'
+SOURCE_L2_PATH = '/Users/luca/../../Volumes/16_Flight_Data/Gap Filling Data/Level2A'
 
 PATH_FEATURES = '/Users/luca/Desktop/Internship/PMOD/TSI-Prediction/Data/features.txt'
 
@@ -23,31 +23,62 @@ target3 = "irradiance_C [W.m-2]"
 
 ###################################################################################################
 
+# def list_files_in_subfolders(folder_path):
+#     ''' Expected folder structure:
+    
+#         folder_path/
+#         ├── month1/                  
+#         │   └── day1-file
+#         │   └── day2-file    
+#         │   └── ...
+#         ├── month2/ 
+#         ... 
+#     '''
+#     file_paths = []
+#     for month in os.listdir(folder_path):
+#         try:
+#             if(month != ".DS_Store"):
+#                 print(month)
+#                 for day in os.listdir(folder_path + "/" + month):
+#                     if(day != ".DS_Store"):
+#                         print(day)
+#                         file_paths.append(folder_path + "/" + month + "/" + day)
+#         except:
+#             print("No files in this folder")
+#     print(len(file_paths))
+#     return file_paths
+
 def list_files_in_subfolders(folder_path):
     ''' Expected folder structure:
     
         folder_path/
-        ├── month1/                  
-        │   └── day1-file
-        │   └── day2-file    
-        │   └── ...
-        ├── month2/ 
+        ├── year1/
+        │   ├── month1/
+        │   │   └── day1-file
+        │   │   └── day2-file    
+        │   │   └── ...
+        │   ├── month2/
+        │   │   └── day1-file
+        │   │   └── ...
+        ├── year2/
         ... 
     '''
     file_paths = []
-    for month in os.listdir(folder_path):
-        try:
-            if(month != ".DS_Store"):
-                print(month)
-                for day in os.listdir(folder_path + "/" + month):
-                    if(day != ".DS_Store"):
-                        print(day)
-                        file_paths.append(folder_path + "/" + month + "/" + day)
-        except:
-            print("No files in this folder")
-    print(len(file_paths))
+    for year in os.listdir(folder_path):
+        year_path = os.path.join(folder_path, year)
+        if os.path.isdir(year_path) and year != ".DS_Store":
+            print(f"Year: {year}")
+            for month in os.listdir(year_path):
+                month_path = os.path.join(year_path, month)
+                if os.path.isdir(month_path) and month != ".DS_Store":
+                    print(f"  Month: {month}")
+                    for day_file in os.listdir(month_path):
+                        day_file_path = os.path.join(month_path, day_file)
+                        if os.path.isfile(day_file_path) and day_file != ".DS_Store":
+                            print(f"    File: {day_file}")
+                            file_paths.append(day_file_path)
+    print(f"Total files found: {len(file_paths)}")
     return file_paths
-
 
 def read_file_level1(path: str, features_level_1: list) -> pd.DataFrame:
     """Read as file from level1 and returns a dataframe indexed by time
