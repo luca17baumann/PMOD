@@ -90,16 +90,16 @@ def read_file_level1(path: str, features_level_1: list) -> pd.DataFrame:
     Returns:
         pd.DataFrame
     """
-    all_data = fits.open(path)
+    try:
+        all_data = fits.open(path)
 
-    # only keep time until minute
-    TimeJD = all_data[8].data.field("Timestamp")
-    TimeJD = Time(TimeJD, format="isot")
-    TimeJD = TimeJD.strftime("%Y-%m-%d %H:%M")
+        # only keep time until minute
+        TimeJD = all_data[8].data.field("Timestamp")
+        TimeJD = Time(TimeJD, format="isot")
+        TimeJD = TimeJD.strftime("%Y-%m-%d %H:%M")
 
-    data = {"TimeJD": TimeJD}
+        data = {"TimeJD": TimeJD}
     
-    try: 
         for feature in features_level_1:
             data[feature] = all_data[8].data.field(feature)
         dtypes = {feature: float for feature in features_level_1}

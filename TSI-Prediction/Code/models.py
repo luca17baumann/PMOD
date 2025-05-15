@@ -17,8 +17,8 @@ from torch.utils.data import Dataset, DataLoader, TensorDataset
 ## HYPERPARAMETER ################################################################################
 
 PATH_TRAIN = '/Users/luca/Desktop/Internship/PMOD/TSI-Prediction/Data/df_train.pkl'
-PATH_TEST = '/Users/luca/Desktop/Internship/PMOD/TSI-Prediction/Data//df_test.pkl'
-TARGET_PATH = '/Users/luca/Desktop/Internship/PMOD/TSI-Prediction//Models/'
+PATH_TEST = '/Users/luca/Desktop/Internship/PMOD/TSI-Prediction/Data/df_test.pkl'
+TARGET_PATH = '/Users/luca/Desktop/Internship/PMOD/TSI-Prediction/Models/'
 # Setting SPLIT = 0 is equivalent to training on the full data available and filling in the found gaps
 SPLIT = 0.2
 
@@ -29,7 +29,7 @@ output_size = 1
 learning_rate = 3e-3
 num_epochs = 100
 dropout = 0.0
-num_layers = 2
+num_layers = 4
 bidirectional = False
 
 ################################################################################################
