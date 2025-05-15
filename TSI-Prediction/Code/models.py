@@ -27,7 +27,7 @@ input_size = 24
 hidden_size = 128
 output_size = 1
 learning_rate = 3e-3
-num_epochs = 3#100
+num_epochs = 100
 dropout = 0.0
 num_layers = 2
 bidirectional = False
@@ -38,16 +38,22 @@ bidirectional = False
 
 # generate train test split if specified or use new test data
 df_train = pd.read_pickle(PATH_TRAIN)
-X_train = df_train.drop(['IrrB', 'TimeJD'], axis = 1)  # Features for training
+X_train = df_train.drop(['IrrB'], axis = 1)  # Features for training
 y_train = df_train['IrrB'] # Target
 
 if SPLIT > 0:
     # Assuming a time-based split
     X_train, X_test, y_train, y_test = train_test_split(X_train, y_train, test_size=0.2, random_state=42, shuffle=False)
-
+    time_train = np.array(pd.DataFrame(X_train['TimeJD'])).flatten()
+    time_test = np.array(pd.DataFrame(X_test['TimeJD'])).flatten()
+    X_train = X_train.drop('TimeJD', axis = 1)
+    X_test = X_test.drop('TimeJD', axis = 1)
 else:
     df_test = read_pickle(PATH_TEST)
     X_test = df_test.drop(['IrrB', 'TimeJD'], axis = 1) # Features for gaps
+    time_train = np.array(df_train['TimeJD'])
+    time_test = np.array(df_test['TimeJD'])
+    X_train = X_train.drop('TimeJD', axis = 1)
 
 ## DATA PREPARATION ############################################################################
 
@@ -91,8 +97,8 @@ class test_dataset(Dataset):
 
 torch.manual_seed(42)
 
-train_dataset = train_dataset(X_train, y_train, 3) # 8
-test_dataset = test_dataset(X_test, 3) # 8
+train_dataset = train_dataset(X_train, y_train, 5) # 8
+test_dataset = test_dataset(X_test, 1) # 8
 train_dataloader = DataLoader(train_dataset, batch_size=64, shuffle=True)
 test_dataloader = DataLoader(test_dataset, batch_size=64, shuffle=False)
 
@@ -168,7 +174,11 @@ with torch.no_grad():
     for inputs in test_dataloader:
         # Forward pass
         outputs = model(inputs)
-        predictions += outputs.squeeze().tolist()
+        pred = outputs.squeeze().tolist()
+        if isinstance(pred, float):
+            predictions.append(pred)
+        else:
+            predictions += pred
 
 # Bring back to original scale
 predictions = np.array(predictions).reshape(-1, 1)  # Reshape to 2D array
@@ -181,16 +191,9 @@ pd.DataFrame(predictions, columns=["Predicted"]).to_csv(TARGET_PATH + 'predicted
 
 ## PLOT GENERATION #############################################################################
 
-# Convert data in the appropriate format
-time_train = np.array(df_train['TimeJD'])
-time_test = np.array(df_test['TimeJD'])
-
 # Make sure the plotted data is in the original scale
 irr_train = np.array(scaler_y.inverse_transform(y_train)).ravel()
 irr_test = np.array(predictions).flatten()
-
-print("Shape of time_test:", time_test.shape)
-print("Shape of irr_test:", irr_test.shape)
 
 # Create a single scatter plot with overlapping data points
 plt.figure(figsize=(30, 6))
@@ -215,7 +218,9 @@ plt.savefig(TARGET_PATH + 'output_plot.png')
 ## ERROR MEASURE ###############################################################################
 
 # This is only available in case the code is being run with a split
-mse = mean_squared_error(y_test, irr_test)
-print(f"Mean Squared Error on the test split: {mse}")
+
+if SPLIT > 0:
+    mse = mean_squared_error(y_test, irr_test)
+    print(f"Mean Squared Error on the test split: {mse}")
 
 ################################################################################################
