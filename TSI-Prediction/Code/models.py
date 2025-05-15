@@ -20,7 +20,7 @@ PATH_TRAIN = '/Users/luca/Desktop/Internship/PMOD/TSI-Prediction/Data/df_train.p
 PATH_TEST = '/Users/luca/Desktop/Internship/PMOD/TSI-Prediction/Data//df_test.pkl'
 TARGET_PATH = '/Users/luca/Desktop/Internship/PMOD/TSI-Prediction//Models/'
 # Setting SPLIT = 0 is equivalent to training on the full data available and filling in the found gaps
-SPLIT = 0
+SPLIT = 0.2
 
 # Network hyperparameters
 input_size = 24
@@ -97,7 +97,7 @@ class test_dataset(Dataset):
 
 torch.manual_seed(42)
 
-train_dataset = train_dataset(X_train, y_train, 5) # 8
+train_dataset = train_dataset(X_train, y_train, 16) # 8
 test_dataset = test_dataset(X_test, 1) # 8
 train_dataloader = DataLoader(train_dataset, batch_size=64, shuffle=True)
 test_dataloader = DataLoader(test_dataset, batch_size=64, shuffle=False)
