@@ -29,8 +29,8 @@ output_size = 1
 learning_rate = 3e-3
 num_epochs = 100
 dropout = 0.0
-num_layers = 4
-bidirectional = False
+num_layers = 2
+bidirectional = True
 
 ################################################################################################
 
@@ -128,7 +128,23 @@ class LSTM(nn.Module):
 
 # Create the bidirectional LSTM network    
 class BILSTM(nn.Module):
-    pass
+    def __init__(self, input_size, hidden_size, output_size, dropout, num_layers):
+        super().__init__()
+        self.hidden_size = hidden_size
+        self.lstm = nn.LSTM(input_size, hidden_size, num_layers=num_layers, batch_first = True, dropout=dropout, bidirectional=True)
+        self.fc = nn.Linear(hidden_size * 2, output_size)
+        self.num_layers = num_layers
+
+    def forward(self, input):
+        batch_size = input.shape[0]
+        hidden = self.init_hidden(batch_size)
+        lstm_out, hidden = self.lstm(input, hidden)
+        output = self.fc(lstm_out[:, -1, :])
+        return output
+
+    def init_hidden(self, batch_size):
+        return (torch.randn(self.num_layers * 2, batch_size, self.hidden_size),
+                torch.randn(self.num_layers * 2, batch_size, self.hidden_size))
 
 ################################################################################################
 
