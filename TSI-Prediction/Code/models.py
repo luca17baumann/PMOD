@@ -13,6 +13,7 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import Dataset, DataLoader, TensorDataset
+import time as t
 
 ## HYPERPARAMETER ################################################################################
 
@@ -30,7 +31,8 @@ learning_rate = 3e-3
 num_epochs = 100
 dropout = 0.0
 num_layers = 3
-bidirectional = True
+bidirectional = False
+gap_filling = True
 window = 16
 
 ################################################################################################
@@ -44,7 +46,10 @@ y_train = df_train['IrrB'] # Target
 
 if SPLIT > 0:
     # Assuming a time-based split
-    X_train, X_test, y_train, y_test = train_test_split(X_train, y_train, test_size=0.2, random_state=42, shuffle=False)
+    if gap_filling:
+        X_train, X_test, y_train, y_test = create_gap_train_test_split(1,2,PATH_TRAIN)
+    else:
+        X_train, X_test, y_train, y_test = train_test_split(X_train, y_train, test_size=0.2, random_state=42, shuffle=False)
     time_train = np.array(pd.DataFrame(X_train['TimeJD'])).flatten()
     time_test = np.array(pd.DataFrame(X_test['TimeJD'])).flatten()
     X_train = X_train.drop('TimeJD', axis = 1)
@@ -161,6 +166,7 @@ else:
 criterion = nn.MSELoss()
 optimizer = optim.Adam(model.parameters(), lr=learning_rate)
 
+t0 = t.time()
 # Train the model
 for epoch in range(num_epochs):
     train_loss = 0.0
@@ -181,7 +187,10 @@ for epoch in range(num_epochs):
 
 torch.save(model.state_dict(), TARGET_PATH + 'trained_model.pt')
 print("Model saved as 'trained_model.pt'")
+t1 = t.time()
+time_elapsed = t1 - t0
 
+print("Training time: ", int(time_elapsed / 60), " Minutes ", int(time_elapsed % 60)," Seconds.")
 # Set the model to evaluation mode
 model.eval()
 
