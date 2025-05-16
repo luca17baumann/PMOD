@@ -27,11 +27,11 @@ input_size = 24
 hidden_size = 128
 output_size = 1
 learning_rate = 3e-3
-num_epochs = 1
+num_epochs = 100
 dropout = 0.0
-num_layers = 2
-bidirectional = False
-window = 5
+num_layers = 3
+bidirectional = True
+window = 16
 
 ################################################################################################
 
