@@ -27,10 +27,11 @@ input_size = 24
 hidden_size = 128
 output_size = 1
 learning_rate = 3e-3
-num_epochs = 100
+num_epochs = 1
 dropout = 0.0
 num_layers = 2
-bidirectional = True
+bidirectional = False
+window = 5
 
 ################################################################################################
 
@@ -97,8 +98,8 @@ class test_dataset(Dataset):
 
 torch.manual_seed(42)
 
-train_dataset = train_dataset(X_train, y_train, 16) # 8
-test_dataset = test_dataset(X_test, 1) # 8
+train_dataset = train_dataset(X_train, y_train, window) # 8
+test_dataset = test_dataset(X_test, window) # 8
 train_dataloader = DataLoader(train_dataset, batch_size=64, shuffle=True)
 test_dataloader = DataLoader(test_dataset, batch_size=64, shuffle=False)
 
@@ -209,7 +210,7 @@ pd.DataFrame(predictions, columns=["Predicted"]).to_csv(TARGET_PATH + 'predicted
 
 # Make sure the plotted data is in the original scale
 irr_train = np.array(scaler_y.inverse_transform(y_train)).ravel()
-irr_test = np.array(predictions).flatten()
+irr_test = np.array(predictions).ravel()
 
 # Create a single scatter plot with overlapping data points
 plt.figure(figsize=(30, 6))
@@ -217,8 +218,8 @@ plt.figure(figsize=(30, 6))
 # Plot the original data in blue
 sns.scatterplot(x = time_train, y = irr_train,  color = 'royalblue', label='Original train', s = 50)
 if SPLIT > 0:
-    sns.scatterplot(x = time_test, y = y_test, color='lightblue', label='Original test', s = 50)
-sns.scatterplot(x = time_test, y = irr_test, color='deeppink', label='Predicted', s = 50)
+    sns.scatterplot(x = time_test[:(len(time_test)-window+1)], y = y_test[:(len(time_test)-window+1)], color='lightblue', label='Original test', s = 50)
+sns.scatterplot(x = time_test[:(len(time_test)-window+1)], y = irr_test, color='deeppink', label='Predicted', s = 50)
 
 # Add title and legend
 plt.title('Overlay of Original and Predicted Data', fontsize = 32)
@@ -236,7 +237,7 @@ plt.savefig(TARGET_PATH + 'output_plot.png')
 # This is only available in case the code is being run with a split
 
 if SPLIT > 0:
-    mse = mean_squared_error(y_test, irr_test)
+    mse = mean_squared_error(y_test[:(len(time_test)-window+1)], irr_test)
     print(f"Mean Squared Error on the test split: {mse}")
 
 ################################################################################################
