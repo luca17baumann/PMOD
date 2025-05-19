@@ -29,10 +29,11 @@ hidden_size = 128
 output_size = 1
 learning_rate = 3e-3
 num_epochs = 100
-dropout = 0.0
+dropout = 0.4
 num_layers = 3
 bidirectional = False
 gap_filling = True
+lstm = False
 window = 16
 
 ################################################################################################
@@ -47,7 +48,7 @@ y_train = df_train['IrrB'] # Target
 if SPLIT > 0:
     # Assuming a time-based split
     if gap_filling:
-        X_train, X_test, y_train, y_test = create_gap_train_test_split(1,2,PATH_TRAIN)
+        X_train, X_test, y_train, y_test = create_gap_train_test_split(1,1,PATH_TRAIN)
     else:
         X_train, X_test, y_train, y_test = train_test_split(X_train, y_train, test_size=0.2, random_state=42, shuffle=False)
     time_train = np.array(pd.DataFrame(X_train['TimeJD'])).flatten()
@@ -129,8 +130,8 @@ class LSTM(nn.Module):
         return output
 
     def init_hidden(self, batch_size):
-        return (torch.randn(self.num_layers, batch_size, self.hidden_size),
-                torch.randn(self.num_layers, batch_size, self.hidden_size))
+        return (torch.zeros(self.num_layers, batch_size, self.hidden_size),
+                torch.zeros(self.num_layers, batch_size, self.hidden_size))
 
 # Create the bidirectional LSTM network    
 class BILSTM(nn.Module):
@@ -149,18 +150,41 @@ class BILSTM(nn.Module):
         return output
 
     def init_hidden(self, batch_size):
-        return (torch.randn(self.num_layers * 2, batch_size, self.hidden_size),
-                torch.randn(self.num_layers * 2, batch_size, self.hidden_size))
+        return (torch.zeros(self.num_layers * 2, batch_size, self.hidden_size),
+                torch.zeros(self.num_layers * 2, batch_size, self.hidden_size))
+        
+class NN(nn.Module):
+    def __init__(self, input_size, hidden_size, output_size, dropout, num_layers):
+        super().__init__()
+        layers = []
+        in_features = input_size
+        for i in range(num_layers - 1):
+            layers.append(nn.Sequential(
+                nn.Linear(in_features, hidden_size),
+                nn.Dropout(dropout),
+                nn.ReLU()
+            ))
+            in_features = hidden_size
+        layers.append(nn.Linear(in_features, output_size))
+        self.layers = nn.ModuleList(layers)
+    
+    def forward(self, x):
+        for layer in self.layers:
+            x = layer(x)
+        return x.mean(1)
 
 ################################################################################################
 
 ## GAP FILLIMNG ################################################################################
     
-# Instantiate the desired model with the cosen parameters
-if not bidirectional:
-    model = LSTM(input_size, hidden_size, output_size, dropout, num_layers)
-else:
-    model = BILSTM(input_size, hidden_size, output_size, dropout, num_layers)
+# Instantiate the desired model with the chosen parameters
+if lstm:
+    if not bidirectional:
+        model = LSTM(input_size, hidden_size, output_size, dropout, num_layers)
+    else:
+        model = BILSTM(input_size, hidden_size, output_size, dropout, num_layers)
+else :
+    model = NN(input_size, 5 * hidden_size, output_size, dropout, 2 * num_layers)
 
 # Define the loss function and optimizer
 criterion = nn.MSELoss()
@@ -227,7 +251,7 @@ plt.figure(figsize=(30, 6))
 # Plot the original data in blue
 sns.scatterplot(x = time_train, y = irr_train,  color = 'royalblue', label='Original train', s = 50)
 if SPLIT > 0:
-    sns.scatterplot(x = time_test[:(len(time_test)-window+1)], y = y_test[:(len(time_test)-window+1)], color='lightblue', label='Original test', s = 50)
+    sns.scatterplot(x = time_test, y = y_test, color='lightblue', label='Original test', s = 50)
 sns.scatterplot(x = time_test[:(len(time_test)-window+1)], y = irr_test, color='deeppink', label='Predicted', s = 50)
 
 # Add title and legend
