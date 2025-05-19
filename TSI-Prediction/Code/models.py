@@ -14,6 +14,7 @@ import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import Dataset, DataLoader, TensorDataset
 import time as t
+from tcn import TemporalConvNet
 
 ## HYPERPARAMETER ################################################################################
 
@@ -34,6 +35,7 @@ num_layers = 3
 bidirectional = False
 gap_filling = True
 lstm = False
+ff = False
 window = 16
 
 ################################################################################################
@@ -48,7 +50,7 @@ y_train = df_train['IrrB'] # Target
 if SPLIT > 0:
     # Assuming a time-based split
     if gap_filling:
-        X_train, X_test, y_train, y_test = create_gap_train_test_split(1,1,PATH_TRAIN)
+        X_train, X_test, y_train, y_test = create_gap_train_test_split(1,4,PATH_TRAIN)
     else:
         X_train, X_test, y_train, y_test = train_test_split(X_train, y_train, test_size=0.2, random_state=42, shuffle=False)
     time_train = np.array(pd.DataFrame(X_train['TimeJD'])).flatten()
@@ -157,7 +159,7 @@ class NN(nn.Module):
     def __init__(self, input_size, hidden_size, output_size, dropout, num_layers):
         super().__init__()
         layers = []
-        in_features = input_size
+        in_features = input_size * window
         for i in range(num_layers - 1):
             layers.append(nn.Sequential(
                 nn.Linear(in_features, hidden_size),
@@ -169,10 +171,26 @@ class NN(nn.Module):
         self.layers = nn.ModuleList(layers)
     
     def forward(self, x):
+        x = x.view(x.size(0), -1)
         for layer in self.layers:
             x = layer(x)
-        return x.mean(1)
+        return x
 
+class TCN(nn.Module):
+    def __init__(self, input_size, hidden_size, output_size, dropout, num_layers):
+        super().__init__()
+        self.tcn = TemporalConvNet(
+            num_inputs = input_size,
+            num_channels = [hidden_size] * num_layers,
+            kernel_size = 3,
+            dropout = dropout,
+        )
+        self.fc = nn.Linear(hidden_size, output_size)
+    
+    def forward(self, x):
+        x = x.permute(0,2,1)
+        x = self.tcn(x)
+        return self.fc(x[:, : , -1])
 ################################################################################################
 
 ## GAP FILLIMNG ################################################################################
@@ -183,8 +201,10 @@ if lstm:
         model = LSTM(input_size, hidden_size, output_size, dropout, num_layers)
     else:
         model = BILSTM(input_size, hidden_size, output_size, dropout, num_layers)
-else :
-    model = NN(input_size, 5 * hidden_size, output_size, dropout, 2 * num_layers)
+elif ff:
+    model = NN(input_size, 2 * hidden_size, output_size, dropout, 2 * num_layers)
+else:
+    model = TCN(input_size, hidden_size, output_size, dropout, num_layers)
 
 # Define the loss function and optimizer
 criterion = nn.MSELoss()
