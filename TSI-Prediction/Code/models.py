@@ -30,7 +30,7 @@ SPLIT = 0.2
 input_size = 24
 hidden_size = 128
 output_size = 1
-learning_rate = 3e-3
+learning_rate = 1e-4
 num_epochs = 100
 dropout = 0.4
 num_layers = 3
@@ -38,7 +38,7 @@ bidirectional = False
 gap_filling = True
 lstm = False
 ff = False
-tcn = False
+tcn = True
 window = 16
 
 ################################################################################################
@@ -53,7 +53,7 @@ y_train = df_train['IrrB'] # Target
 if SPLIT > 0:
     # Assuming a time-based split
     if gap_filling:
-        X_train, X_test, y_train, y_test = create_gap_train_test_split(1,6,PATH_TRAIN)
+        X_train, X_test, y_train, y_test = create_gap_train_test_split(1,1,PATH_TRAIN)
     else:
         X_train, X_test, y_train, y_test = train_test_split(X_train, y_train, test_size=0.2, random_state=42, shuffle=False)
     time_train = np.array(pd.DataFrame(X_train['TimeJD'])).flatten()
@@ -225,7 +225,7 @@ class TST(nn.Module):
     def forward(self, x):
         x = self.model(x).squeeze(1)
         return self.fc(x) 
-################################################################################################
+###########################################y#####################################################
 
 ## GAP FILLIMNG ################################################################################
     
