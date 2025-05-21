@@ -30,20 +30,24 @@ SPLIT = 0.2
 input_size = 24
 hidden_size = 128
 output_size = 1
-learning_rate = 1e-4
+learning_rate = 3e-3
 num_epochs = 100
-dropout = 0.4
+dropout = 0.0
 num_layers = 3
 bidirectional = False
 gap_filling = True
-lstm = False
+lstm = True
 ff = False
-tcn = True
+tcn = False
 window = 16
 
 ################################################################################################
 
 ## READ-IN #####################################################################################
+
+torch.manual_seed(42)
+random.seed(42)
+np.random.seed(42)
 
 # generate train test split if specified or use new test data
 df_train = pd.read_pickle(PATH_TRAIN)
@@ -58,8 +62,8 @@ if SPLIT > 0:
         X_train, X_test, y_train, y_test = train_test_split(X_train, y_train, test_size=0.2, random_state=42, shuffle=False)
     time_train = np.array(pd.DataFrame(X_train['TimeJD'])).flatten()
     time_test = np.array(pd.DataFrame(X_test['TimeJD'])).flatten()
-    X_train = X_train.drop('TimeJD', axis = 1)
-    X_test = X_test.drop('TimeJD', axis = 1)
+    X_train = X_train.drop(['TimeJD'], axis = 1)
+    X_test = X_test.drop(['TimeJD'], axis = 1)
 else:
     df_test = read_pickle(PATH_TEST)
     X_test = df_test.drop(['IrrB', 'TimeJD'], axis = 1) # Features for gaps
@@ -106,8 +110,6 @@ class test_dataset(Dataset):
 
     def __getitem__(self, idx):
         return self.X[idx:self.window_size + idx]
-
-torch.manual_seed(42)
 
 train_dataset = train_dataset(X_train, y_train, window) # 8
 test_dataset = test_dataset(X_test, window) # 8
@@ -234,7 +236,7 @@ if lstm:
     if not bidirectional:
         model = LSTM(input_size, hidden_size, output_size, dropout, num_layers)
     else:
-        model = BILSTM(input_size, hidden_size, output_size, dropout, num_layers)
+        model = BILSTM(input_size, hidden_size - 51, output_size, dropout + 0.2, num_layers)
 elif ff:
     model = NN(input_size, 2 * hidden_size, output_size, dropout, 2 * num_layers)
 elif tcn:
