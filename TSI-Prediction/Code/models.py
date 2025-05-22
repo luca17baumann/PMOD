@@ -28,18 +28,18 @@ SPLIT = 0.2
 
 # Network hyperparameters
 input_size = 24
-hidden_size = 128
+hidden_size = 128 # 128
 output_size = 1
 learning_rate = 3e-3
-num_epochs = 100
+num_epochs = 100 # 100
 dropout = 0.0
-num_layers = 3
-bidirectional = False
+num_layers = 1 # 3
+bidirectional = True
 gap_filling = True
-lstm = True
+lstm = False
 ff = False
 tcn = False
-window = 16
+window = 16 # 16
 
 ################################################################################################
 
@@ -205,21 +205,21 @@ class TST(nn.Module):
             seq_len = window,
             pred_len = output_size,
             e_layers = num_layers,
-            n_heads = 8,
+            n_heads = 4,
             d_model = hidden_size,
             d_ff = hidden_size * 2,
             dropout = dropout,
             fc_dropout = dropout,
             head_dropout = dropout,
             individual = False,
-            patch_len=16,
-            stride=8,
+            patch_len=4,
+            stride=4,
             padding_patch=None,
-            revin=True,
-            affine=True,
-            subtract_last=False,
+            revin=False,
+            affine=False,
+            subtract_last=True,
             decomposition=False,
-            kernel_size=25
+            kernel_size=3
         )
         self.model = PTST(config)
         self.fc = nn.Linear(input_size, output_size)
@@ -236,7 +236,7 @@ if lstm:
     if not bidirectional:
         model = LSTM(input_size, hidden_size, output_size, dropout, num_layers)
     else:
-        model = BILSTM(input_size, hidden_size - 51, output_size, dropout + 0.2, num_layers)
+        model = BILSTM(input_size, hidden_size, output_size, dropout, num_layers)
 elif ff:
     model = NN(input_size, 2 * hidden_size, output_size, dropout, 2 * num_layers)
 elif tcn:
