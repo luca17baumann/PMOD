@@ -7,13 +7,14 @@ import random
 import math
 from utils import *
 from datetime import datetime
+from sklearn.impute import KNNImputer
 
 ## HYPERPARAMETER ################################################################################
 
 PATH_TRAIN = '/Users/luca/Desktop/Internship/PMOD/TSI-Prediction/Data/df_train_2021_to_2023.pkl'
 PATH_TEST = '/Users/luca/Desktop/Internship/PMOD/TSI-Prediction/Data/df_test_2021_to_2023.pkl'
 TARGET_PATH = '/Users/luca/Desktop/Internship/PMOD/TSI-Prediction/Data/df_test_2021_to_2023_'
-mode = 'mean'  # mean or median
+mode = 'impute'  # mean, median, impute
 
 ##################################################################################################
 
@@ -79,8 +80,11 @@ for i in range(len(gap_dict)):
     selected_rows = df_train.loc[mask_combined, feature_cols]
     if mode == 'mean':
         feature_values = selected_rows.mean()
-    else:
+    elif mode == 'median':
         feature_values = selected_rows.median()
+    else:
+        feature_values = selected_rows.fillna(np.nan)
+        imputer = KNNImputer(n_neighbors=5)
 
     n_points = len(df_train[mask_before]) if len(df_train[mask_before]) > 0 else len(df_train[mask_after])
     mask = mask_before if len(df_train[mask_before]) > 0 else mask_after
@@ -99,5 +103,20 @@ for i in range(len(gap_dict)):
     gap_filled_df = pd.DataFrame(new_rows)
     df_test_extended = pd.concat([df_test, gap_filled_df], ignore_index=True)
     df_test = df_test_extended.sort_values('TimeJD').reset_index(drop=True)
+
+if mode == 'impute':
+    df = pd.concat([df_train, df_test], ignore_index=True)
+    numeric_cols = df.columns.tolist()
+    # Exclude 'IrrB' from imputation
+    numeric_cols = [col for col in numeric_cols if (col != 'IrrB' and col != 'TimeJD')]
+    for col in numeric_cols:
+        df[col] = pd.to_numeric(df[col], errors='coerce')
+    tmp = df[numeric_cols]
+    imputed = imputer.fit_transform(tmp)
+    df_imputed = pd.DataFrame(imputed, columns=numeric_cols, index=df.index)
+    df[numeric_cols] = df_imputed
+    df_test = df.iloc[len(df_train):].reset_index(drop=True)
+
+new_test_dates = sorted(df_test['TimeJD'].dt.date.unique())
 
 df_test.to_pickle(TARGET_PATH + f'postprocessed_{mode}.pkl')

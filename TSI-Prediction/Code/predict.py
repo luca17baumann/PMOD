@@ -21,21 +21,21 @@ from types import SimpleNamespace
 ## HYPERPARAMETER ################################################################################
 
 PATH_TRAIN = '/Users/luca/Desktop/Internship/PMOD/TSI-Prediction/Data/df_train_2021_to_2023.pkl'
-PATH_TEST = '/Users/luca/Desktop/Internship/PMOD/TSI-Prediction/Data/df_test_2021_to_2023_postprocessed_mean.pkl'
+PATH_TEST = '/Users/luca/Desktop/Internship/PMOD/TSI-Prediction/Data/df_test_2021_to_2023_postprocessed_impute.pkl'
 TARGET_PATH = '/Users/luca/Desktop/Internship/PMOD/TSI-Prediction/Models/'
-MODEL_PATH = '/Users/luca/Desktop/Internship/PMOD/TSI-Prediction/Models/PatchTST.pt'
+MODEL_PATH = '/Users/luca/Desktop/Internship/PMOD/TSI-Prediction/Models/BILSTM.pt'
 # Setting SPLIT = 0 is equivalent to training on the full data available and filling in the found gaps
-SPLIT = 0.2
+SPLIT = 0
 
 # Network hyperparameters
 input_size = 24
 hidden_size = 128 # 128
 output_size = 1
-dropout = 0
-num_layers = 5 
+dropout = 0.2
+num_layers = 3 
 bidirectional = True
 gap_filling = True
-lstm = False
+lstm = True
 ff = False
 tcn = False
 window = 16 # 16
