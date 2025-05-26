@@ -23,6 +23,7 @@ from types import SimpleNamespace
 PATH_TRAIN = '/Users/luca/Desktop/Internship/PMOD/TSI-Prediction/Data/df_train_2021_to_2023.pkl'
 PATH_TEST = '/Users/luca/Desktop/Internship/PMOD/TSI-Prediction/Data/df_test_2021_to_2023_postprocessed_mean.pkl'
 TARGET_PATH = '/Users/luca/Desktop/Internship/PMOD/TSI-Prediction/Models/'
+MODEL_PATH = '/Users/luca/Desktop/Internship/PMOD/TSI-Prediction/Models/PatchTST.pt'
 # Setting SPLIT = 0 is equivalent to training on the full data available and filling in the found gaps
 SPLIT = 0.2
 
@@ -30,18 +31,22 @@ SPLIT = 0.2
 input_size = 24
 hidden_size = 128 # 128
 output_size = 1
-learning_rate = 3e-3
-num_epochs = 1 # 100
-dropout = 0.1
-num_layers = 3 # 3
-bidirectional = False
+dropout = 0
+num_layers = 5 
+bidirectional = True
 gap_filling = True
-lstm = True
+lstm = False
 ff = False
 tcn = False
 window = 16 # 16
 
 ################################################################################################
+
+## READ-IN #####################################################################################
+
+torch.manual_seed(42)
+random.seed(42)
+np.random.seed(42)
 
 ## READ-IN #####################################################################################
 
@@ -244,37 +249,10 @@ elif tcn:
 else:
     model = TST(input_size, hidden_size, output_size, dropout, num_layers)
 
+model.load_state_dict(torch.load(MODEL_PATH, weights_only=True))
+
 # Define the loss function and optimizer
 criterion = nn.MSELoss()
-optimizer = optim.Adam(model.parameters(), lr=learning_rate)
-
-t0 = t.time()
-# Train the model
-for epoch in range(num_epochs):
-    train_loss = 0.0
-    for i, (inputs, labels) in enumerate(train_dataloader):
-        optimizer.zero_grad()
-
-        # Forward pass
-        outputs = model(inputs)
-        loss = criterion(outputs, labels)
-
-        # Backward pass and optimization
-        loss.backward()
-        train_loss += loss.item()
-        optimizer.step()
-
-    print('Epoch [{}/{}], Loss: {:.8f}'
-          .format(epoch+1, num_epochs, train_loss / len(train_dataloader)))
-
-torch.save(model.state_dict(), TARGET_PATH + 'trained_model.pt')
-print("Model saved as 'trained_model.pt'")
-t1 = t.time()
-time_elapsed = t1 - t0
-
-print("Training time: ", int(time_elapsed / 60), " Minutes ", int(time_elapsed % 60)," Seconds.")
-# Set the model to evaluation mode
-model.eval()
 
 # Generate predictions for the test dataset
 predictions = []
