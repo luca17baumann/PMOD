@@ -20,8 +20,8 @@ from types import SimpleNamespace
 
 ## HYPERPARAMETER ################################################################################
 
-PATH_TRAIN = '/Users/luca/Desktop/Internship/PMOD/TSI-Prediction/Data/df_train.pkl'
-PATH_TEST = '/Users/luca/Desktop/Internship/PMOD/TSI-Prediction/Data/df_test.pkl'
+PATH_TRAIN = '/Users/luca/Desktop/Internship/PMOD/TSI-Prediction/Data/df_train_2021_to_2023.pkl'
+PATH_TEST = '/Users/luca/Desktop/Internship/PMOD/TSI-Prediction/Data/df_test_2021_to_2023.pkl'
 TARGET_PATH = '/Users/luca/Desktop/Internship/PMOD/TSI-Prediction/Models/'
 # Setting SPLIT = 0 is equivalent to training on the full data available and filling in the found gaps
 SPLIT = 0.2
@@ -32,8 +32,8 @@ hidden_size = 128 # 128
 output_size = 1
 learning_rate = 3e-3
 num_epochs = 1 # 100
-dropout = 0.0
-num_layers = 1 # 3
+dropout = 0.1
+num_layers = 3 # 3
 bidirectional = False
 gap_filling = True
 lstm = True
