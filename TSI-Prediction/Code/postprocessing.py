@@ -7,14 +7,15 @@ import random
 import math
 from utils import *
 from datetime import datetime
-from sklearn.impute import KNNImputer
+from sklearn.experimental import enable_iterative_imputer
+from sklearn.impute import KNNImputer, IterativeImputer
 
 ## HYPERPARAMETER ################################################################################
 
 PATH_TRAIN = '/Users/luca/Desktop/Internship/PMOD/TSI-Prediction/Data/df_train_2021_to_2023.pkl'
 PATH_TEST = '/Users/luca/Desktop/Internship/PMOD/TSI-Prediction/Data/df_test_2021_to_2023.pkl'
 TARGET_PATH = '/Users/luca/Desktop/Internship/PMOD/TSI-Prediction/Data/df_test_2021_to_2023_'
-mode = 'impute'  # mean, median, impute
+mode = 'iter_impute'  # mean, median, knn_impute, iter_impute
 
 ##################################################################################################
 
@@ -82,9 +83,12 @@ for i in range(len(gap_dict)):
         feature_values = selected_rows.mean()
     elif mode == 'median':
         feature_values = selected_rows.median()
-    else:
+    elif mode == 'knn_impute':
         feature_values = selected_rows.fillna(np.nan)
         imputer = KNNImputer(n_neighbors=5)
+    else:
+        feature_values = selected_rows.fillna(np.nan)
+        imputer = IterativeImputer(random_state=42, max_iter=50)
 
     n_points = len(df_train[mask_before]) if len(df_train[mask_before]) > 0 else len(df_train[mask_after])
     mask = mask_before if len(df_train[mask_before]) > 0 else mask_after
@@ -104,7 +108,7 @@ for i in range(len(gap_dict)):
     df_test_extended = pd.concat([df_test, gap_filled_df], ignore_index=True)
     df_test = df_test_extended.sort_values('TimeJD').reset_index(drop=True)
 
-if mode == 'impute':
+if 'impute' in mode:
     df = pd.concat([df_train, df_test], ignore_index=True)
     numeric_cols = df.columns.tolist()
     # Exclude 'IrrB' from imputation
@@ -116,7 +120,5 @@ if mode == 'impute':
     df_imputed = pd.DataFrame(imputed, columns=numeric_cols, index=df.index)
     df[numeric_cols] = df_imputed
     df_test = df.iloc[len(df_train):].reset_index(drop=True)
-
-new_test_dates = sorted(df_test['TimeJD'].dt.date.unique())
 
 df_test.to_pickle(TARGET_PATH + f'postprocessed_{mode}.pkl')
