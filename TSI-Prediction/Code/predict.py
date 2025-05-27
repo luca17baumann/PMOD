@@ -25,14 +25,14 @@ PATH_TEST = '/Users/luca/Desktop/Internship/PMOD/TSI-Prediction/Data/df_test_202
 TARGET_PATH = '/Users/luca/Desktop/Internship/PMOD/TSI-Prediction/Models/'
 MODEL_PATH = '/Users/luca/Desktop/Internship/PMOD/TSI-Prediction/Models/BILSTM.pt'
 # Setting SPLIT = 0 is equivalent to training on the full data available and filling in the found gaps
-SPLIT = 0
+SPLIT = 0.2
 
 # Network hyperparameters
 input_size = 24
-hidden_size = 128 # 128
+hidden_size = 64 # 128
 output_size = 1
 dropout = 0.2
-num_layers = 3 
+num_layers = 3
 bidirectional = True
 gap_filling = True
 lstm = True
@@ -41,12 +41,6 @@ tcn = False
 window = 16 # 16
 
 ################################################################################################
-
-## READ-IN #####################################################################################
-
-torch.manual_seed(42)
-random.seed(42)
-np.random.seed(42)
 
 ## READ-IN #####################################################################################
 
