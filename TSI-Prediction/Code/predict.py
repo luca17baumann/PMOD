@@ -25,7 +25,7 @@ PATH_TEST = '/Users/luca/Desktop/Internship/PMOD/TSI-Prediction/Data/df_test_202
 TARGET_PATH = '/Users/luca/Desktop/Internship/PMOD/TSI-Prediction/Models/'
 MODEL_PATH = '/Users/luca/Desktop/Internship/PMOD/TSI-Prediction/Models/BILSTM_old.pt'
 # Setting SPLIT = 0 is equivalent to training on the full data available and filling in the found gaps
-SPLIT = 0
+SPLIT = 0.2
 
 # Network hyperparameters
 input_size = 24
@@ -282,7 +282,7 @@ plt.figure(figsize=(30, 6))
 sns.scatterplot(x = time_train, y = irr_train,  color = 'royalblue', label='Original train', s = 50)
 if SPLIT > 0:
     sns.scatterplot(x = time_test, y = y_test, color='lightblue', label='Original test', s = 50)
-sns.scatterplot(x = time_test[:(len(time_test)-window+1)], y = irr_test, color='deeppink', label='Predicted', s = 50)
+sns.scatterplot(x = time_test[window-1:], y = irr_test, color='deeppink', label='Predicted', s = 50)
 
 # Add title and legend
 plt.title('Overlay of Original and Predicted Data', fontsize = 32)
@@ -311,8 +311,9 @@ for i, hy in enumerate(half_years):
     test_mask = half_years_test == hy
     if SPLIT > 0:
         sns.scatterplot(x = time_test[test_mask], y = y_test[test_mask], color='lightblue', label='Original test', s = 50, ax = ax)
-    tmp = time_test[:len(irr_test)]
-    sns.scatterplot(x = tmp[test_mask[:len(irr_test)]], y = irr_test[test_mask[:len(irr_test)]], color='deeppink', label='Predicted', s = 50, ax = ax)
+    pred = time_test[window-1:]
+    pred_mask = test_mask[window-1:]
+    sns.scatterplot(x = pred[pred_mask], y = irr_test[pred_mask], color='deeppink', label='Predicted', s = 50, ax = ax)
     ax.set_title(f'Predictions for {hy}', fontsize=20)
     ax.set_xlabel('TimeJD')
     ax.set_ylabel('IrrB')
@@ -328,7 +329,7 @@ plt.savefig(TARGET_PATH + 'output_plot_by_half_year.png')
 # This is only available in case the code is being run with a split
 
 if SPLIT > 0:
-    mse = mean_squared_error(y_test[:(len(time_test)-window+1)], irr_test)
+    mse = mean_squared_error(y_test[window-1:], irr_test)
     print(f"Mean Squared Error on the test split: {mse}")
 
 ################################################################################################
