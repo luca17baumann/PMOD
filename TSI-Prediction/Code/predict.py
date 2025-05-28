@@ -23,13 +23,14 @@ from types import SimpleNamespace
 PATH_TRAIN = '/Users/luca/Desktop/Internship/PMOD/TSI-Prediction/Data/df_train_2021_to_2023.pkl'
 PATH_TEST = '/Users/luca/Desktop/Internship/PMOD/TSI-Prediction/Data/df_test_2021_to_2023_postprocessed_iter_impute.pkl'
 TARGET_PATH = '/Users/luca/Desktop/Internship/PMOD/TSI-Prediction/Models/'
-MODEL_PATH = '/Users/luca/Desktop/Internship/PMOD/TSI-Prediction/Models/BILSTM_old.pt'
+MODEL_PATH = '/Users/luca/Desktop/Internship/PMOD/TSI-Prediction/Models/BILSTM.pt'
 # Setting SPLIT = 0 is equivalent to training on the full data available and filling in the found gaps
 SPLIT = 0.2
 
 # Network hyperparameters
-input_size = 24
-hidden_size = 128 # 128
+time_features = True
+input_size = 24 if not time_features else 29
+hidden_size = 64 # 128
 output_size = 1
 dropout = 0.2
 num_layers = 3
@@ -59,12 +60,26 @@ if SPLIT > 0:
         X_train, X_test, y_train, y_test = create_gap_train_test_split(-1,-1,PATH_TRAIN)
     else:
         X_train, X_test, y_train, y_test = train_test_split(X_train, y_train, test_size=0.2, random_state=42, shuffle=False)
+    if time_features:
+        train_dt, test_dt = pd.to_datetime(X_train['TimeJD']), pd.to_datetime(X_test['TimeJD'])
+        X_train['year'], X_test['year'] = train_dt.dt.year, test_dt.dt.year
+        X_train['month'], X_test['month'] = train_dt.dt.month, test_dt.dt.month
+        X_train['day'], X_test['day'] = train_dt.dt.day, test_dt.dt.day
+        X_train['hour'], X_test['hour'] = train_dt.dt.hour, test_dt.dt.hour
+        X_train['minute'], X_test['minute'] = train_dt.dt.minute, test_dt.dt.minute
     time_train = np.array(pd.DataFrame(X_train['TimeJD'])).flatten()
     time_test = np.array(pd.DataFrame(X_test['TimeJD'])).flatten()
     X_train = X_train.drop(['TimeJD'], axis = 1)
     X_test = X_test.drop(['TimeJD'], axis = 1)
 else:
     df_test = read_pickle(PATH_TEST)
+    if time_features:
+        train_dt, test_dt = pd.to_datetime(X_train['TimeJD']), pd.to_datetime(df_test['TimeJD'])
+        X_train['year'], df_test['year'] = train_dt.dt.year, test_dt.dt.year
+        X_train['month'], df_test['month'] = train_dt.dt.month, test_dt.dt.month
+        X_train['day'], df_test['day'] = train_dt.dt.day, test_dt.dt.day
+        X_train['hour'], df_test['hour'] = train_dt.dt.hour, test_dt.dt.hour
+        X_train['minute'], df_test['minute'] = train_dt.dt.minute, test_dt.dt.minute
     X_test = df_test.drop(['IrrB', 'TimeJD'], axis = 1) # Features for gaps
     time_train = np.array(df_train['TimeJD'])
     time_test = np.array(df_test['TimeJD'])
