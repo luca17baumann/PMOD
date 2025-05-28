@@ -32,7 +32,7 @@ input_size = 24 if not time_features else 29
 hidden_size = 128 # 128
 output_size = 1
 learning_rate = 3e-3
-num_epochs = 100 # 100
+num_epochs = 70 # 100
 dropout = 0
 num_layers = 3 # 3
 bidirectional = False
@@ -41,6 +41,8 @@ lstm = True
 ff = False
 tcn = False
 window = 16 # 16
+gap = -1
+months = -1
 
 ################################################################################################
 
@@ -336,34 +338,35 @@ plt.ylabel('IrrB', fontsize=12)
 # Save plot in the desired folder
 plt.savefig(TARGET_PATH + 'output_plot.png')
 
-time_train_dt = pd.to_datetime(time_train)
-time_test_dt = pd.to_datetime(time_test)
-half_years_train = time_train_dt.year.astype(str) + "-H" + ((time_train_dt.month > 6).astype(int) + 1).astype(str)
-unique_half_years_train = sorted(half_years_train.unique())
-half_years_test = time_test_dt.year.astype(str) + "-H" + ((time_test_dt.month > 6).astype(int) + 1).astype(str)
-unique_half_years_test = sorted(half_years_test.unique())
-half_years = sorted(set(unique_half_years_train) | set(unique_half_years_test))
+if gap == -1:
+    time_train_dt = pd.to_datetime(time_train)
+    time_test_dt = pd.to_datetime(time_test)
+    half_years_train = time_train_dt.year.astype(str) + "-H" + ((time_train_dt.month > 6).astype(int) + 1).astype(str)
+    unique_half_years_train = sorted(half_years_train.unique())
+    half_years_test = time_test_dt.year.astype(str) + "-H" + ((time_test_dt.month > 6).astype(int) + 1).astype(str)
+    unique_half_years_test = sorted(half_years_test.unique())
+    half_years = sorted(set(unique_half_years_train) | set(unique_half_years_test))
 
-fig, axes = plt.subplots(len(half_years), 1, figsize=(30, 6 * len(half_years)), sharey=True)
-start_train, end_train = 0, 0
-start_test, end_test = 0, 0 
-for i, hy in enumerate(half_years):
-    ax = axes[i]
-    train_mask = half_years_train == hy
-    sns.scatterplot(x = time_train[train_mask], y = irr_train[train_mask],  color = 'royalblue', label='Original train', s = 50, ax = ax)
-    test_mask = half_years_test == hy
-    if SPLIT > 0:
-        sns.scatterplot(x = time_test[test_mask], y = y_test[test_mask], color='lightblue', label='Original test', s = 50, ax = ax)
-    pred = time_test[window-1:]
-    pred_mask = test_mask[window-1:]
-    sns.scatterplot(x = pred[pred_mask], y = irr_test[pred_mask], color='deeppink', label='Predicted', s = 50, ax = ax)
-    ax.set_title(f'Predictions for {hy}', fontsize=20)
-    ax.set_xlabel('TimeJD')
-    ax.set_ylabel('IrrB')
-    ax.legend()
+    fig, axes = plt.subplots(len(half_years), 1, figsize=(30, 6 * len(half_years)), sharey=True)
+    start_train, end_train = 0, 0
+    start_test, end_test = 0, 0 
+    for i, hy in enumerate(half_years):
+        ax = axes[i]
+        train_mask = half_years_train == hy
+        sns.scatterplot(x = time_train[train_mask], y = irr_train[train_mask],  color = 'royalblue', label='Original train', s = 50, ax = ax)
+        test_mask = half_years_test == hy
+        if SPLIT > 0:
+            sns.scatterplot(x = time_test[test_mask], y = y_test[test_mask], color='lightblue', label='Original test', s = 50, ax = ax)
+        pred = time_test[window-1:]
+        pred_mask = test_mask[window-1:]
+        sns.scatterplot(x = pred[pred_mask], y = irr_test[pred_mask], color='deeppink', label='Predicted', s = 50, ax = ax)
+        ax.set_title(f'Predictions for {hy}', fontsize=20)
+        ax.set_xlabel('TimeJD')
+        ax.set_ylabel('IrrB')
+        ax.legend()
 
-plt.tight_layout()
-plt.savefig(TARGET_PATH + 'output_plot_by_half_year.png')
+    plt.tight_layout()
+    plt.savefig(TARGET_PATH + 'output_plot_by_half_year.png')
 
 ################################################################################################
 
