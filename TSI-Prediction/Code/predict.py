@@ -21,11 +21,11 @@ from types import SimpleNamespace
 ## HYPERPARAMETER ################################################################################
 
 PATH_TRAIN = '/Users/luca/Desktop/Internship/PMOD/TSI-Prediction/Data/df_train_2021_to_2023.pkl'
-PATH_TEST = '/Users/luca/Desktop/Internship/PMOD/TSI-Prediction/Data/df_test_2021_to_2023_postprocessed_iter_impute.pkl'
+PATH_TEST = '/Users/luca/Desktop/Internship/PMOD/TSI-Prediction/Data/df_test_2021_to_2023_postprocessed_mean.pkl'
 TARGET_PATH = '/Users/luca/Desktop/Internship/PMOD/TSI-Prediction/Models/'
-MODEL_PATH = '/Users/luca/Desktop/Internship/PMOD/TSI-Prediction/Models/LSTM.pt'
+MODEL_PATH = '/Users/luca/Desktop/Internship/PMOD/TSI-Prediction/Models/BILSTM_improved.pt'
 # Setting SPLIT = 0 is equivalent to training on the full data available and filling in the found gaps
-SPLIT = 0.2
+SPLIT = 0
 
 # Network hyperparameters
 time_features = True
@@ -33,8 +33,8 @@ input_size = 24 if not time_features else 29
 hidden_size = 128 # 128
 output_size = 1
 dropout = 0
-num_layers = 3
-bidirectional = False
+num_layers = 2
+bidirectional = True
 gap_filling = True
 lstm = True
 ff = False
@@ -74,7 +74,7 @@ if SPLIT > 0:
     X_train = X_train.drop(['TimeJD'], axis = 1)
     X_test = X_test.drop(['TimeJD'], axis = 1)
 else:
-    df_test = read_pickle(PATH_TEST)
+    df_test = pd.read_pickle(PATH_TEST)
     if time_features:
         train_dt, test_dt = pd.to_datetime(X_train['TimeJD']), pd.to_datetime(df_test['TimeJD'])
         X_train['year'], df_test['year'] = train_dt.dt.year, test_dt.dt.year

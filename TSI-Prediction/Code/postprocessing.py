@@ -90,8 +90,8 @@ for i in range(len(gap_dict)):
         feature_values = selected_rows.fillna(np.nan)
         imputer = IterativeImputer(random_state=42, max_iter=10)
 
-    n_points = len(df_train[mask_before]) if len(df_train[mask_before]) > 0 else len(df_train[mask_after])
-    mask = mask_before if len(df_train[mask_before]) > 0 else mask_after
+    n_points = max(len(df_train[mask_before]),len(df_train[mask_after])) #len(df_train[mask_before]) if len(df_train[mask_before]) > 0 else len(df_train[mask_after])
+    mask = mask_before if len(df_train[mask_before]) == n_points else mask_after
     new_rows = []
 
     for gap_date in current_gap:

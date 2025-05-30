@@ -32,7 +32,7 @@ input_size = 24 if not time_features else 29
 hidden_size = 128 # 128
 output_size = 1
 learning_rate = 3e-3
-num_epochs = 100 # 100
+num_epochs = 100 # 100ñ
 dropout = 0
 num_layers = 3 # 3
 bidirectional = False
@@ -42,7 +42,7 @@ ff = False
 tcn = False
 window = 16 # 16
 gap = 1
-months = 1
+months = 24
 
 ################################################################################################
 
