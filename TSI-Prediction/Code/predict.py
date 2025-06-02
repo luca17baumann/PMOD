@@ -25,7 +25,7 @@ PATH_TEST = '/Users/luca/Desktop/Internship/PMOD/TSI-Prediction/Data/df_test_202
 TARGET_PATH = '/Users/luca/Desktop/Internship/PMOD/TSI-Prediction/Models/'
 MODEL_PATH = '/Users/luca/Desktop/Internship/PMOD/TSI-Prediction/Models/BILSTM_improved.pt'
 # Setting SPLIT = 0 is equivalent to training on the full data available and filling in the found gaps
-SPLIT = 0
+SPLIT = 0.2
 
 # Network hyperparameters
 time_features = True

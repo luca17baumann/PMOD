@@ -16,6 +16,7 @@ PATH_TRAIN = '/Users/luca/Desktop/Internship/PMOD/TSI-Prediction/Data/df_train_2
 PATH_TEST = '/Users/luca/Desktop/Internship/PMOD/TSI-Prediction/Data/df_test_2021_to_2023.pkl'
 TARGET_PATH = '/Users/luca/Desktop/Internship/PMOD/TSI-Prediction/Data/df_test_2021_to_2023_'
 mode = 'iter_impute'  # mean, median, knn_impute, iter_impute
+amount = 'first' # first or day before
 
 ##################################################################################################
 
@@ -62,11 +63,13 @@ for i, gap in enumerate(gap_lengths):
     ctr += len(tmp)
     gap_dict[f"gap{i}"] = tmp
 
+if amount == 'first':
+    times = None
+
 for i in range(len(gap_dict)):
     current_gap = gap_dict[f'gap{i}']
     gap_start = current_gap[0]
     gap_end = current_gap[-1]
-
     # Find the date before and after the gap in the full date range
     idx_start = np.where(full_range == gap_start)[0][0]
     idx_end = np.where(full_range == gap_end)[0][0]
@@ -89,14 +92,16 @@ for i in range(len(gap_dict)):
     else:
         feature_values = selected_rows.fillna(np.nan)
         imputer = IterativeImputer(random_state=42, max_iter=10)
-
     n_points = max(len(df_train[mask_before]),len(df_train[mask_after])) #len(df_train[mask_before]) if len(df_train[mask_before]) > 0 else len(df_train[mask_after])
     mask = mask_before if len(df_train[mask_before]) == n_points else mask_after
     new_rows = []
 
     for gap_date in current_gap:
         if n_points > 0:
-            times = df_train.loc[mask, 'TimeJD']
+            if amount != 'first':
+                times = df_train.loc[mask, 'TimeJD']
+            elif amount == 'first' and i == 0:
+                times = df_train.loc[mask, 'TimeJD']
             for t in times:
                 row = feature_values.to_dict()
                 row['IrrB'] = np.nan
