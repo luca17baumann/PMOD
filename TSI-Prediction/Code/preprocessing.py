@@ -22,6 +22,7 @@ IMAGE_PATH = '/Users/luca/Desktop/Internship/PMOD/TSI-Prediction/Images/'
 OUTLIER_UPPER = 1370
 OUTLIER_LOWER = 1356
 THRESHOLD = 3
+paper_reproduction = True
 
 ################################################################################################
 
@@ -135,6 +136,11 @@ sns.scatterplot(x=outliers['TimeJD'], y=outliers['IrrB'], ax = axes[1], color='r
 plt.savefig(IMAGE_PATH + 'outlier_plot.png')
 
 ################################################################################################
+
+if paper_reproduction:
+    end = pd.Timestamp('2023-09-01')
+
+    df = df[(df['TimeJD'] < end)]
 
 ## GAP FINDING #################################################################################
 
