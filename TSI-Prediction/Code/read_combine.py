@@ -1,6 +1,6 @@
 import astropy
 from astropy.io import fits
-from astropy.time import Time
+from astropy.time import Time, TimeDelta
 from astropy import units as u
 import pandas as pd
 import os
@@ -20,6 +20,8 @@ time = "Irradiance TimeJD"
 target = "irradiance_B [W.m-2]"
 target2 = "irradiance_A [W.m-2]"
 target3 = "irradiance_C [W.m-2]"
+
+DARA = True
 
 ###################################################################################################
 
@@ -92,16 +94,26 @@ def read_file_level1(path: str, features_level_1: list) -> pd.DataFrame:
     """
     try:
         all_data = fits.open(path)
+        if DARA:
+            # only keep time until minute
+            TimeJD = all_data[8].data.field("Timestamp")
+            TimeJD = Time(TimeJD, format="isot")
+            TimeJD = TimeJD.strftime("%Y-%m-%d %H:%M")
 
-        # only keep time until minute
-        TimeJD = all_data[8].data.field("Timestamp")
-        TimeJD = Time(TimeJD, format="isot")
-        TimeJD = TimeJD.strftime("%Y-%m-%d %H:%M")
-
-        data = {"TimeJD": TimeJD}
-    
-        for feature in features_level_1:
-            data[feature] = all_data[8].data.field(feature)
+            data = {"TimeJD": TimeJD}
+        
+            for feature in features_level_1:
+                data[feature] = all_data[8].data.field(feature)
+        else:
+            TimeJD = all_data[4].data.field("Timestamp_Offset")
+            ref_time = Time("2000-01-01T12:00:00", format="isot")
+            TimeJD = ref_time + TimeDelta(TimeJD, format='sec')
+            TimeJD = TimeJD.strftime("%Y-%m-%d %H:%M")
+            
+            data = {"TimeJD": TimeJD}
+        
+            for feature in features_level_1:
+                data[feature] = all_data[4].data.field(feature)
         dtypes = {feature: float for feature in features_level_1}
         data = pd.DataFrame(data).astype(dtypes)
 
@@ -234,7 +246,10 @@ def main():
 
     # Read all files
     df_level1 = concatenate_level1(paths_files_level1, features_level_1)
-    df_level2 = concatenate_level2(paths_files_level2, time, target, target2, target3)
+    if DARA:
+        df_level2 = concatenate_level2(paths_files_level2, time, target, target2, target3)
+    else:
+        df_level2 = concatenate_level2(paths_files_level2, time, target)
 
     # Combine the data from level1 and level2 and save to pickle file
     df_combined = merge_level1_level2(df_level1, df_level2)

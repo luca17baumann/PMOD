@@ -12,10 +12,10 @@ from sklearn.impute import KNNImputer, IterativeImputer
 
 ## HYPERPARAMETER ################################################################################
 
-PATH_TRAIN = '/Users/luca/Desktop/Internship/PMOD/TSI-Prediction/Data/df_train_2021_to_2023.pkl'
-PATH_TEST = '/Users/luca/Desktop/Internship/PMOD/TSI-Prediction/Data/df_test_2021_to_2023.pkl'
-TARGET_PATH = '/Users/luca/Desktop/Internship/PMOD/TSI-Prediction/Data/df_test_2021_to_2023_'
-mode = 'iter_impute'  # mean, median, knn_impute, iter_impute
+PATH_TRAIN = '/Users/luca/Desktop/Internship/PMOD/TSI-Prediction/Data/df_train.pkl'
+PATH_TEST = '/Users/luca/Desktop/Internship/PMOD/TSI-Prediction/Data/df_test.pkl'
+TARGET_PATH = '/Users/luca/Desktop/Internship/PMOD/TSI-Prediction/Data/df_test_'
+mode = 'mean'  # mean, median, knn_impute, iter_impute
 amount = 'first' # first or day before
 
 ##################################################################################################
