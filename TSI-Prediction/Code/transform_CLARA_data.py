@@ -66,5 +66,5 @@ features = df.columns
 obj_cols = df.select_dtypes(include=['object']).columns
 print('Number of features: ', len(features))
 print('out of which ', len(obj_cols), ' are of type object.')
-print((df['num_CERES_matches'] == 0).any())
+print(features)
 

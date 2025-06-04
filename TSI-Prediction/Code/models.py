@@ -43,6 +43,8 @@ tcn = False
 window = 16 # 16
 gap = -1
 months = -1
+train_loss = True
+plot_train = False
 
 ################################################################################################
 
@@ -312,6 +314,22 @@ predictions = scaler_y.inverse_transform(predictions)
 # Save outputs in desired folder
 pd.DataFrame(predictions, columns=["Predicted"]).to_csv(TARGET_PATH + 'predicted_data.csv', index=False)
 
+if train_loss:
+    # Generate predictions for the train dataset
+    dataloader = DataLoader(train_dataset, batch_size=64, shuffle=False)
+    train_predictions = []
+    with torch.no_grad():
+        for inputs, _ in dataloader:
+            outputs = model(inputs)
+            train_pred = outputs.squeeze().tolist()
+            if isinstance(train_pred, float):
+                train_predictions.append(pred)
+            else:
+                train_predictions += train_pred
+    # Bring back to original scale
+    train_predictions = np.array(train_predictions).reshape(-1, 1)
+    train_predictions = scaler_y.inverse_transform(train_predictions)
+
 ################################################################################################
 
 ## PLOT GENERATION #############################################################################
@@ -327,6 +345,8 @@ plt.figure(figsize=(30, 6))
 sns.scatterplot(x = time_train, y = irr_train,  color = 'royalblue', label='Original train', s = 50)
 if SPLIT > 0:
     sns.scatterplot(x = time_test, y = y_test, color='lightblue', label='Original test', s = 50)
+if plot_train and train_loss:
+    sns.scatterplot(x=time_train[window-1:], y=train_predictions.ravel(), color='gold', label='Predicted train', s=50)
 sns.scatterplot(x = time_test[window-1:], y = irr_test, color='deeppink', label='Predicted', s = 50)
 
 # Add title and legend
@@ -376,6 +396,9 @@ if gap == -1:
 
 if SPLIT > 0:
     mse = mean_squared_error(y_test[window-1:], irr_test)
+    if train_loss:
+        mse_train = mean_squared_error(irr_train[window-1:], train_predictions.ravel())
+        print(f"Mean Squared Error on the train split: {mse_train}")
     print(f"Mean Squared Error on the test split: {mse}")
 
 ################################################################################################

@@ -20,12 +20,12 @@ from types import SimpleNamespace
 
 ## HYPERPARAMETER ################################################################################
 
-PATH_TRAIN = '/Users/luca/Desktop/Internship/PMOD/TSI-Prediction/Data/df_train.pkl'
-PATH_TEST = '/Users/luca/Desktop/Internship/PMOD/TSI-Prediction/Data/df_test_postprocessed_mean.pkl'
+PATH_TRAIN = '/Users/luca/Desktop/Internship/PMOD/TSI-Prediction/Data/df_train_2021_to_2023.pkl'
+PATH_TEST = '/Users/luca/Desktop/Internship/PMOD/TSI-Prediction/Data/df_test_2021_to_2023_postprocessed_mean.pkl'
 TARGET_PATH = '/Users/luca/Desktop/Internship/PMOD/TSI-Prediction/Models/'
-MODEL_PATH = '/Users/luca/Desktop/Internship/PMOD/TSI-Prediction/Models/L.pt'
+MODEL_PATH = '/Users/luca/Desktop/Internship/PMOD/TSI-Prediction/Models/BILSTM_improved.pt'
 # Setting SPLIT = 0 is equivalent to training on the full data available and filling in the found gaps
-SPLIT = 0
+SPLIT = 0.2
 
 # Network hyperparameters
 time_features = True
@@ -34,7 +34,7 @@ hidden_size = 128 # 128
 output_size = 1
 dropout = 0
 num_layers = 2
-bidirectional = False
+bidirectional = True
 gap_filling = True
 lstm =True
 ff = False
@@ -42,7 +42,8 @@ tcn = False
 window = 16 # 16
 gap = -1
 months = -1
-plot_train = True
+train_loss = True
+plot_train = False
 
 ################################################################################################
 
@@ -286,7 +287,7 @@ predictions = scaler_y.inverse_transform(predictions)
 # Save outputs in desired folder
 pd.DataFrame(predictions, columns=["Predicted"]).to_csv(TARGET_PATH + 'predicted_data.csv', index=False)
 
-if plot_train:
+if train_loss:
     # Generate predictions for the train dataset
     dataloader = DataLoader(train_dataset, batch_size=64, shuffle=False)
     train_predictions = []
@@ -317,7 +318,7 @@ plt.figure(figsize=(30, 6))
 sns.scatterplot(x = time_train, y = irr_train,  color = 'royalblue', label='Original train', s = 50)
 if SPLIT > 0:
     sns.scatterplot(x = time_test, y = y_test, color='lightblue', label='Original test', s = 50)
-if plot_train:
+if plot_train and train_loss:
     sns.scatterplot(x=time_train[window-1:], y=train_predictions.ravel(), color='gold', label='Predicted train', s=50)
 sns.scatterplot(x = time_test[window-1:], y = irr_test, color='deeppink', label='Predicted', s = 50)
 
@@ -368,6 +369,9 @@ if gap == -1:
 
 if SPLIT > 0:
     mse = mean_squared_error(y_test[window-1:], irr_test)
+    if train_loss:
+        mse_train = mean_squared_error(irr_train[window-1:], train_predictions.ravel())
+        print(f"Mean Squared Error on the train split: {mse_train}")
     print(f"Mean Squared Error on the test split: {mse}")
 
 ################################################################################################
