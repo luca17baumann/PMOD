@@ -29,23 +29,73 @@ pip install -r requirements.txt
 **For DARA:**
 
 1. Preprocess the data:
+    First the Level1A and Level2A fits file need to be read in and merged. Required inputs are Level1A and Level2A fits files in the correct folder structure (see below). Output is a pickle file with all the data.
     - In the file 'read_combine.py' set:
         - DARA = True
-        - SOURCE_L1_PATH, SOURCE_L2_PATH, PATH_FEATURES, TARGET_PATH 
-    ```sh
-    python read_combine.py
-    ```
+        - SOURCE_L1_PATH, SOURCE_L2_PATH, PATH_FEATURES, TARGET_PATH to the desired path
+    - Make sure to:
+        - Create a Data folder if it does not already exist
+        - Respect the folder structure described in the function description of 'list_files_in_subfolders'
+    - Run the file: 
+        ```sh
+        python read_combine.py
+        ```
+    Afterwards the merged file can be split into train and test datasets for model training. Input is the previously constructed pickle file and output are 2 pickle files for the training and test data. 
+    - In the file 'preprocessing.py' set:
+        - PATH_DATA, PATH_FEATURES, TARGET_PATH, IMAGE_PATH to the desired path
+    - Run the file: 
+        ```sh
+        python preprocess.py
+        ```
+    To fill the gaps in the data the test dataset needs to be imputed. Input is the previously constructed test data pickle file and output is a new imputed test pickle file.
+    - In the file 'postprocessing.py' set:
+        - PATH_TRAIN, PATH_TEST, TARGET_PATH to the desired path
+        - mode to the desired imputation mode
+        - amount to 'first' to use the same amount of timepoints for all gap predictions, 'day before' to predict at the same hour and minute points as the day before the gap
 2. Train the model:
-    ```sh
-    python models.py
-    ```
+    Inputs are the train and test pickle files and outputs are a trained model, two plots of the models' predictions and a plot of the train loss. 
+    - In the file 'models.py' set:
+        - PATH_TRAIN, PATH_TEST, TARGET_PATH to the desired path
+        - SPLIT = 0 to train in the entire train dataset (no validation data) and SPLIT > 0 to artificially produce gaps for validation and compute prediction losses
+        - time_features = True to include year, month, day, hour and minute as features for model training
+        - hyperparameters hidden_size, learning_rate, num_epochs, dropout, num_layers, window to the desired values (see report for suitable values)
+        - gap_filling = True to train the model for a gap filling task otherwise it will be trained for forecasting
+        - lstm = True and bidirectional = False to train an unidirectional LSTM
+        - lstm = True and bidirectional = True to train an bidirectional LSTM
+        - lstm = False and ff = True to train a neural network
+        - lstm = False, ff = False and tcn = True to train a temporal convolutional network
+        - lstm = False, ff = False and tcn = False to train a time series transformer
+        - gap = -1 and months = -1 to use the entire dataset for training and artificially include 6 gaps with length 1-6 days (requires SPLIT > 0)
+        - gap > 0 to artificially include 1 gap of 'gap' days (requires SPLIT > 0)
+        - months > 0 to use 'months' months for training
+        - train_loss = True to compute the training loss on the unscaled data (recommended)
+        - plot_train = True to plot the predictions on the training set too
+    - Run the file: 
+        ```sh
+        python models.py
+        ```
 3. Make predictions:
-    ```sh
-    python predict.py
-    ```
-4. Postprocess results:
-    ```sh
-    python postprocessing.py
-    ```
+    To use a previously trained model to make predictions on another gap or reconstruct results without having to retrain the model. Inputs are the train and test pickle files as well as the previously trained model and outputs are the models' predictions.
+    - In the file 'predict.py' set:
+        - The hyperparameters to the same values used in training
+        - Variables which can be changed are: SPLIT, gap, window, train_loss, plot_train
+    - Run the file: 
+        ```sh
+        python predict.py
+        ```
 
 **For CLARA:**
+
+1. Preprocess the data:
+    TODO
+2. Train the model:
+    TODO
+3. Make predictions:
+    TODO
+
+## ETH cluster setup
+
+1. Copy the content of the directory Euler to the cluster
+2. Include the respective train and test pickle files in the Data folder
+3. The number of Job directories (models trained at the same time) can be increased up to 8
+4. Check out slurm documentation to submit, cancel or get information about jobs

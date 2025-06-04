@@ -22,7 +22,8 @@ IMAGE_PATH = '/Users/luca/Desktop/Internship/PMOD/TSI-Prediction/Images/'
 OUTLIER_UPPER = 1370
 OUTLIER_LOWER = 1356
 THRESHOLD = 3
-paper_reproduction = True
+# only use if combined_data includes at least 2021-2023 data and want to reproduce the DARA plot from the DS-lab paper
+paper_reproduction = False 
 
 ################################################################################################
 
