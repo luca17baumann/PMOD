@@ -9,19 +9,19 @@ import time as t
 
 ## HYPERPARAMETERS ################################################################################
 
-SOURCE_L1_PATH = '/Users/luca/../../Volumes/16_Flight_Data/Gap Filling Data/Level1A'
+DARA = False
+
+SOURCE_L1_PATH = '/Users/luca/Desktop/Internship/PMOD/TSI-Prediction/Data/CLARA Housekeeping' if not DARA else '/Users/luca/../../Volumes/16_Flight_Data/Gap Filling Data/Level1A'
 SOURCE_L2_PATH = '/Users/luca/../../Volumes/16_Flight_Data/Gap Filling Data/Level2A'
 
-PATH_FEATURES = '/Users/luca/Desktop/Internship/PMOD/TSI-Prediction/Data/features.txt'
+PATH_FEATURES = '/Users/luca/Desktop/Internship/PMOD/TSI-Prediction/Data/CLARA_features.txt' if not DARA else '/Users/luca/Desktop/Internship/PMOD/TSI-Prediction/Data/features.txt'
 
-TARGET_PATH = "/Users/luca/Desktop/Internship/PMOD/TSI-Prediction/Data/combined_data.pkl"
+TARGET_PATH = "/Users/luca/Desktop/Internship/PMOD/TSI-Prediction/Data/CLARA_combined_data.pkl" if not DARA else "/Users/luca/Desktop/Internship/PMOD/TSI-Prediction/Data/combined_data.pkl"
 
 time = "Irradiance TimeJD"
 target = "irradiance_B [W.m-2]"
 target2 = "irradiance_A [W.m-2]"
 target3 = "irradiance_C [W.m-2]"
-
-DARA = True
 
 ###################################################################################################
 
@@ -242,17 +242,18 @@ def main():
     t0 = t.time()
     features_level_1 = read_file(PATH_FEATURES)
     paths_files_level1 = list_files_in_subfolders(SOURCE_L1_PATH)
-    paths_files_level2 = list_files_in_subfolders(SOURCE_L2_PATH)
+    if DARA:
+        paths_files_level2 = list_files_in_subfolders(SOURCE_L2_PATH)
 
     # Read all files
     df_level1 = concatenate_level1(paths_files_level1, features_level_1)
     if DARA:
         df_level2 = concatenate_level2(paths_files_level2, time, target, target2, target3)
-    else:
-        df_level2 = concatenate_level2(paths_files_level2, time, target)
 
-    # Combine the data from level1 and level2 and save to pickle file
-    df_combined = merge_level1_level2(df_level1, df_level2)
+        # Combine the data from level1 and level2 and save to pickle file
+        df_combined = merge_level1_level2(df_level1, df_level2)
+    else:
+        df_combined = df_level1
     df_combined.to_pickle(TARGET_PATH)
     
     t1 = t.time()

@@ -23,18 +23,18 @@ from types import SimpleNamespace
 PATH_TRAIN = '/Users/luca/Desktop/Internship/PMOD/TSI-Prediction/Data/df_train_2021_to_2023.pkl'
 PATH_TEST = '/Users/luca/Desktop/Internship/PMOD/TSI-Prediction/Data/df_test_2021_to_2023_postprocessed_mean.pkl'
 TARGET_PATH = '/Users/luca/Desktop/Internship/PMOD/TSI-Prediction/Models/'
-MODEL_PATH = '/Users/luca/Desktop/Internship/PMOD/TSI-Prediction/Models/BILSTM_improved.pt'
+MODEL_PATH = '/Users/luca/Desktop/Internship/PMOD/TSI-Prediction/Models/LSTM_improved.pt'
 # Setting SPLIT = 0 is equivalent to training on the full data available and filling in the found gaps
 SPLIT = 0.2
 
 # Network hyperparameters
 time_features = True
 input_size = 24 if not time_features else 29
-hidden_size = 128 # 128
+hidden_size = 32 # 128
 output_size = 1
 dropout = 0
-num_layers = 2
-bidirectional = True
+num_layers = 1
+bidirectional = False
 gap_filling = True
 lstm =True
 ff = False

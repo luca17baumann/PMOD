@@ -59,6 +59,9 @@ if not os.path.exists(PATH_COMBINED):
         else: 
             df[col + '_mean'] = df[col].apply(lambda x: pd.to_datetime(np.mean(pd.to_datetime(x).view(np.int64))) if isinstance(x, (list, np.ndarray)) else np.nan)
             df = df.drop(col, axis = 1)
+    for col in df.columns:
+        if 'CERES' in col:
+            df = df.drop(col, axis=1)
     df.to_pickle(PATH_COMBINED)
 else:
     df = pd.read_pickle(PATH_COMBINED)

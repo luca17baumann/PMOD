@@ -20,11 +20,11 @@ from types import SimpleNamespace
 
 ## HYPERPARAMETER ################################################################################
 
-PATH_TRAIN = '/Users/luca/Desktop/Internship/PMOD/TSI-Prediction/Data/df_train.pkl'
-PATH_TEST = '/Users/luca/Desktop/Internship/PMOD/TSI-Prediction/Data/df_test_postprocessed_mean.pkl'
+PATH_TRAIN = '/Users/luca/Desktop/Internship/PMOD/TSI-Prediction/Data/df_train_2021_to_2023.pkl'
+PATH_TEST = '/Users/luca/Desktop/Internship/PMOD/TSI-Prediction/Data/df_test_2021_to_2023_postprocessed_mean.pkl'
 TARGET_PATH = '/Users/luca/Desktop/Internship/PMOD/TSI-Prediction/Models/'
 # Setting SPLIT = 0 is equivalent to training on the full data available and filling in the found gaps
-SPLIT = 0
+SPLIT = 0.2
 
 # Network hyperparameters
 time_features = True
@@ -32,9 +32,9 @@ input_size = 24 if not time_features else 29
 hidden_size = 128 # 128
 output_size = 1
 learning_rate = 3e-3
-num_epochs = 50 # 100
+num_epochs = 1 # 100
 dropout = 0
-num_layers = 2 # 2
+num_layers = 2 # 3
 bidirectional = False
 gap_filling = True
 lstm = False
@@ -267,25 +267,26 @@ else:
 criterion = nn.MSELoss()
 optimizer = optim.Adam(model.parameters(), lr=learning_rate)
 
+train_losses = []
+
 t0 = t.time()
 # Train the model
 for epoch in range(num_epochs):
     train_loss = 0.0
     for i, (inputs, labels) in enumerate(train_dataloader):
         optimizer.zero_grad()
-
+        
         # Forward pass
         outputs = model(inputs)
         loss = criterion(outputs, labels)
 
         # Backward pass and optimization
         loss.backward()
-        train_loss += loss.item()
+        train_loss += loss.item() * inputs.shape[0]
         optimizer.step()
-
-    print('Epoch [{}/{}], Loss: {:.8f}'
-          .format(epoch+1, num_epochs, train_loss / len(train_dataloader)))
-
+    train_losses.append(train_loss / len(train_dataloader))
+    
+    print(f'Epoch [{epoch+1}/{num_epochs}], Train Loss: {(train_loss / len(train_dataloader)):.8f}')
 torch.save(model.state_dict(), TARGET_PATH + 'trained_model.pt')
 print("Model saved as 'trained_model.pt'")
 t1 = t.time()
@@ -387,6 +388,16 @@ if gap == -1:
 
     plt.tight_layout()
     plt.savefig(TARGET_PATH + 'output_plot_by_half_year.png')
+    
+plt.figure(figsize=(10, 6))
+plt.plot(train_losses, label='Train Loss', color='royalblue')
+plt.xlabel('Epoch')
+plt.ylabel('Loss')
+plt.title('Train and Validation Loss over Epochs')
+plt.legend()
+plt.grid(True)
+plt.tight_layout()
+plt.savefig(TARGET_PATH + 'loss_plot.png')
 
 ################################################################################################
 
