@@ -14,7 +14,7 @@ DARA = False
 SOURCE_L1_PATH = '/Users/luca/Desktop/Internship/PMOD/TSI-Prediction/Data/CLARA Housekeeping' if not DARA else '/Users/luca/../../Volumes/16_Flight_Data/Gap Filling Data/Level1A'
 SOURCE_L2_PATH = '/Users/luca/../../Volumes/16_Flight_Data/Gap Filling Data/Level2A'
 
-PATH_FEATURES = '/Users/luca/Desktop/Internship/PMOD/TSI-Prediction/Data/CLARA_features.txt' if not DARA else '/Users/luca/Desktop/Internship/PMOD/TSI-Prediction/Data/features.txt'
+PATH_FEATURES = '/Users/luca/Desktop/Internship/PMOD/TSI-Prediction/Features/CLARA_features.txt' if not DARA else '/Users/luca/Desktop/Internship/PMOD/TSI-Prediction/Features/features.txt'
 
 TARGET_PATH = "/Users/luca/Desktop/Internship/PMOD/TSI-Prediction/Data/CLARA_combined_data.pkl" if not DARA else "/Users/luca/Desktop/Internship/PMOD/TSI-Prediction/Data/combined_data.pkl"
 
