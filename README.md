@@ -16,6 +16,12 @@ To install the necessary packages use:
 
 **For Conda environments:**
 ```sh
-conda env create -f [environment.yml]
+conda env create -f environment.yml
+```
+
+**For pip installation:**
+```sh
+pip install -r requirements.txt
+```
 
 ## Usage
