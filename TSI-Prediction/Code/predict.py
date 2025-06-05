@@ -23,20 +23,20 @@ from types import SimpleNamespace
 PATH_TRAIN = '/Users/luca/Desktop/Internship/PMOD/TSI-Prediction/Data/df_train_2021_to_2023.pkl'
 PATH_TEST = '/Users/luca/Desktop/Internship/PMOD/TSI-Prediction/Data/df_test_2021_to_2023_postprocessed_mean.pkl'
 TARGET_PATH = '/Users/luca/Desktop/Internship/PMOD/TSI-Prediction/Models/'
-MODEL_PATH = '/Users/luca/Desktop/Internship/PMOD/TSI-Prediction/Models/LSTM_improved.pt'
+MODEL_PATH = '/Users/luca/Desktop/Internship/PMOD/TSI-Prediction/Models/PatchTST.pt'
 # Setting SPLIT = 0 is equivalent to training on the full data available and filling in the found gaps
 SPLIT = 0.2
 
 # Network hyperparameters
-time_features = True
+time_features = False
 input_size = 24 if not time_features else 29
-hidden_size = 32 # 128
+hidden_size = 128 # 128
 output_size = 1
 dropout = 0
-num_layers = 1
-bidirectional = False
+num_layers = 5
+bidirectional = True
 gap_filling = True
-lstm =True
+lstm = False
 ff = False
 tcn = False
 window = 16 # 16
@@ -44,6 +44,8 @@ gap = -1
 months = -1
 train_loss = True
 plot_train = False
+impute = False
+mode = 'mean'
 
 ################################################################################################
 
@@ -61,7 +63,7 @@ y_train = df_train['IrrB'] # Target
 if SPLIT > 0:
     # Assuming a time-based split
     if gap_filling:
-        X_train, X_test, y_train, y_test = create_gap_train_test_split(gap,months,PATH_TRAIN)
+        X_train, X_test, y_train, y_test = create_gap_train_test_split(gap,months,PATH_TRAIN,impute=impute,mode=mode)
     else:
         X_train, X_test, y_train, y_test = train_test_split(X_train, y_train, test_size=0.2, random_state=42, shuffle=False)
     if time_features:

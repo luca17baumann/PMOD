@@ -52,6 +52,10 @@ pip install -r requirements.txt
         - PATH_TRAIN, PATH_TEST, TARGET_PATH to the desired path
         - mode to the desired imputation mode
         - amount to 'first' to use the same amount of timepoints for all gap predictions, 'day before' to predict at the same hour and minute points as the day before the gap
+    - Run the file: 
+        ```sh
+        python postprocess.py
+        ```
 2. Train the model:
     Inputs are the train and test pickle files and outputs are a trained model, two plots of the models' predictions and a plot of the train loss. 
     - In the file 'models.py' set:
@@ -78,7 +82,7 @@ pip install -r requirements.txt
     To use a previously trained model to make predictions on another gap or reconstruct results without having to retrain the model. Inputs are the train and test pickle files as well as the previously trained model and outputs are the models' predictions.
     - In the file 'predict.py' set:
         - The hyperparameters to the same values used in training
-        - Variables which can be changed are: SPLIT, gap, window, train_loss, plot_train
+        - Variables which can be changed are: SPLIT, gap, window, train_loss, plot_train, impute, mode
     - Run the file: 
         ```sh
         python predict.py
