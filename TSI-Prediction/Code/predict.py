@@ -5,6 +5,7 @@ import os
 import seaborn as sns
 import random
 import math
+from datetime import timedelta
 from utils import *
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.model_selection import train_test_split
@@ -23,20 +24,20 @@ from types import SimpleNamespace
 PATH_TRAIN = '/Users/luca/Desktop/Internship/PMOD/TSI-Prediction/Data/df_train_2021_to_2023.pkl'
 PATH_TEST = '/Users/luca/Desktop/Internship/PMOD/TSI-Prediction/Data/df_test_2021_to_2023_postprocessed_mean.pkl'
 TARGET_PATH = '/Users/luca/Desktop/Internship/PMOD/TSI-Prediction/Models/'
-MODEL_PATH = '/Users/luca/Desktop/Internship/PMOD/TSI-Prediction/Models/PatchTST.pt'
+MODEL_PATH = '/Users/luca/Desktop/Internship/PMOD/TSI-Prediction/Models/BILSTM_2021_to_2023_time_feat_best.pt'
 # Setting SPLIT = 0 is equivalent to training on the full data available and filling in the found gaps
 SPLIT = 0.2
 
 # Network hyperparameters
-time_features = False
+time_features = True
 input_size = 24 if not time_features else 29
 hidden_size = 128 # 128
 output_size = 1
 dropout = 0
-num_layers = 5
+num_layers = 2
 bidirectional = True
 gap_filling = True
-lstm = False
+lstm = True
 ff = False
 tcn = False
 window = 16 # 16
@@ -341,7 +342,7 @@ if gap == -1:
     half_years_test = time_test_dt.year.astype(str) + "-H" + ((time_test_dt.month > 6).astype(int) + 1).astype(str)
     unique_half_years_test = sorted(half_years_test.unique())
     half_years = sorted(set(unique_half_years_train) | set(unique_half_years_test))
-
+    
     fig, axes = plt.subplots(len(half_years), 1, figsize=(30, 6 * len(half_years)), sharey=True)
     start_train, end_train = 0, 0
     start_test, end_test = 0, 0 
@@ -362,6 +363,49 @@ if gap == -1:
 
     plt.tight_layout()
     plt.savefig(TARGET_PATH + 'output_plot_by_half_year.png')
+    
+    test_dates = sorted(pd.Series(time_test_dt).dt.date.unique())
+    all_dates = sorted(pd.Series(time_train_dt).dt.date.unique().tolist() + pd.Series(time_test_dt).dt.date.unique().tolist())
+    consecutive_groups = []
+    current_group = []
+
+    for i, day in enumerate(test_dates):
+        if not current_group:
+            current_group.append(day)
+        else:
+            # Check if current date is consecutive to the previous
+            if (day - current_group[-1]) == timedelta(days=1):
+                current_group.append(day)
+            else:
+                consecutive_groups.append(current_group)
+                current_group = [day]
+    if current_group:
+        consecutive_groups.append(current_group)
+
+    for i, gap in enumerate(consecutive_groups):
+        start_idx = all_dates.index(gap[0])
+        end_idx = all_dates.index(gap[-1])
+        ext_start = max(0, start_idx - 5)
+        ext_end = min(len(all_dates) - 1, end_idx + 5)
+        extended_dates = all_dates[ext_start:ext_end + 1]
+
+        mask_train = np.isin(time_train_dt.date, extended_dates)
+        mask_test = np.isin(time_test_dt.date, gap)
+
+        plt.figure(figsize=(10, 4))
+        sns.scatterplot(x=time_train[mask_train], y=irr_train[mask_train], color='royalblue', label='Original train', s=100)
+        if SPLIT > 0:
+            sns.scatterplot(x=time_test[mask_test], y=y_test[mask_test], color='lightblue', label='Original test', s=100)
+        pred = time_test[window-1:]
+        pred_mask = mask_test[window-1:]
+        sns.scatterplot(x=pred[pred_mask], y=irr_test[pred_mask], color='deeppink', label='Predicted', s=100)
+        print(f"Loss for artificial gap from {gap[0]} to {gap[-1]} is {mean_squared_error(y_test[window-1:][pred_mask], irr_test[pred_mask])}")
+        plt.title(f"Predictions for artificial gap from {gap[0]} to {gap[-1]}")
+        plt.xlabel('TimeJD')
+        plt.ylabel('IrrB')
+        plt.legend()
+        plt.tight_layout()
+        plt.savefig(TARGET_PATH + f'gap_{i+1}.png')
 
 ################################################################################################
 
