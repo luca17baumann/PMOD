@@ -20,7 +20,7 @@ from PatchTST import PTST
 from types import SimpleNamespace
 
 ## HYPERPARAMETER ################################################################################
-
+DARA = True
 PATH_TRAIN = '/Users/luca/Desktop/Internship/PMOD/TSI-Prediction/Data/df_train_2021_to_2023.pkl'
 PATH_TEST = '/Users/luca/Desktop/Internship/PMOD/TSI-Prediction/Data/df_test_2021_to_2023_postprocessed_mean.pkl'
 TARGET_PATH = '/Users/luca/Desktop/Internship/PMOD/TSI-Prediction/Models/'
@@ -30,7 +30,10 @@ SPLIT = 0.2
 
 # Network hyperparameters
 time_features = True
-input_size = 24 if not time_features else 29
+if DARA:
+    input_size = 24 if not time_features else 29
+else:
+    input_size = 58 if not time_features else 63
 hidden_size = 128 # 128
 output_size = 1
 dropout = 0
@@ -45,8 +48,10 @@ gap = -1
 months = -1
 train_loss = True
 plot_train = False
-impute = True
+impute = False
 mode = 'mean'
+
+assert (lstm + ff + tcn) <= 1
 
 ################################################################################################
 
@@ -58,13 +63,17 @@ np.random.seed(42)
 
 # generate train test split if specified or use new test data
 df_train = pd.read_pickle(PATH_TRAIN)
-X_train = df_train.drop(['IrrB'], axis = 1)  # Features for training
-y_train = df_train['IrrB'] # Target
+if DARA:
+    X_train = df_train.drop(['IrrB'], axis = 1)  # Features for training
+    y_train = df_train['IrrB'] # Target
+else:
+    X_train = df_train.drop(['CLARA_radiance'], axis = 1)  # Features for training
+    y_train = df_train['CLARA_radiance'] # Target
 
 if SPLIT > 0:
     # Assuming a time-based split
     if gap_filling:
-        X_train, X_test, y_train, y_test = create_gap_train_test_split(gap,months,PATH_TRAIN,impute=impute,mode=mode)
+        X_train, X_test, y_train, y_test = create_gap_train_test_split(gap,months,PATH_TRAIN,impute=impute,mode=mode,DARA=DARA)
     else:
         X_train, X_test, y_train, y_test = train_test_split(X_train, y_train, test_size=0.2, random_state=42, shuffle=False)
     if time_features:
@@ -87,7 +96,10 @@ else:
         X_train['day'], df_test['day'] = train_dt.dt.day, test_dt.dt.day
         X_train['hour'], df_test['hour'] = train_dt.dt.hour, test_dt.dt.hour
         X_train['minute'], df_test['minute'] = train_dt.dt.minute, test_dt.dt.minute
-    X_test = df_test.drop(['IrrB', 'TimeJD'], axis = 1) # Features for gaps
+    if DARA:
+        X_test = df_test.drop(['IrrB', 'TimeJD'], axis = 1) # Features for gaps
+    else: 
+        X_test = df_test.drop(['CLARA_radiance', 'TimeJD'], axis = 1) # Features for gaps
     time_train = np.array(df_train['TimeJD'])
     time_test = np.array(df_test['TimeJD'])
     X_train = X_train.drop('TimeJD', axis = 1)
@@ -358,54 +370,61 @@ if gap == -1:
         sns.scatterplot(x = pred[pred_mask], y = irr_test[pred_mask], color='deeppink', label='Predicted', s = 50, ax = ax)
         ax.set_title(f'Predictions for {hy}', fontsize=20)
         ax.set_xlabel('TimeJD')
-        ax.set_ylabel('IrrB')
+        if DARA:
+            ax.set_ylabel('IrrB')
+        else:
+            ax.set_ylabel('CLARA radiance')
         ax.legend()
 
     plt.tight_layout()
     plt.savefig(TARGET_PATH + 'output_plot_by_half_year.png')
     
-    test_dates = sorted(pd.Series(time_test_dt).dt.date.unique())
-    all_dates = sorted(pd.Series(time_train_dt).dt.date.unique().tolist() + pd.Series(time_test_dt).dt.date.unique().tolist())
-    consecutive_groups = []
-    current_group = []
+    if SPLIT > 0: 
+        test_dates = sorted(pd.Series(time_test_dt).dt.date.unique())
+        all_dates = sorted(pd.Series(time_train_dt).dt.date.unique().tolist() + pd.Series(time_test_dt).dt.date.unique().tolist())
+        consecutive_groups = []
+        current_group = []
 
-    for i, day in enumerate(test_dates):
-        if not current_group:
-            current_group.append(day)
-        else:
-            # Check if current date is consecutive to the previous
-            if (day - current_group[-1]) == timedelta(days=1):
+        for i, day in enumerate(test_dates):
+            if not current_group:
                 current_group.append(day)
             else:
-                consecutive_groups.append(current_group)
-                current_group = [day]
-    if current_group:
-        consecutive_groups.append(current_group)
+                # Check if current date is consecutive to the previous
+                if (day - current_group[-1]) == timedelta(days=1):
+                    current_group.append(day)
+                else:
+                    consecutive_groups.append(current_group)
+                    current_group = [day]
+        if current_group:
+            consecutive_groups.append(current_group)
 
-    for i, gap in enumerate(consecutive_groups):
-        start_idx = all_dates.index(gap[0])
-        end_idx = all_dates.index(gap[-1])
-        ext_start = max(0, start_idx - 5)
-        ext_end = min(len(all_dates) - 1, end_idx + 5)
-        extended_dates = all_dates[ext_start:ext_end + 1]
+        for i, gap in enumerate(consecutive_groups):
+            start_idx = all_dates.index(gap[0])
+            end_idx = all_dates.index(gap[-1])
+            ext_start = max(0, start_idx - 5)
+            ext_end = min(len(all_dates) - 1, end_idx + 5)
+            extended_dates = all_dates[ext_start:ext_end + 1]
 
-        mask_train = np.isin(time_train_dt.date, extended_dates)
-        mask_test = np.isin(time_test_dt.date, gap)
+            mask_train = np.isin(time_train_dt.date, extended_dates)
+            mask_test = np.isin(time_test_dt.date, gap)
 
-        plt.figure(figsize=(10, 4))
-        sns.scatterplot(x=time_train[mask_train], y=irr_train[mask_train], color='royalblue', label='Original train', s=100)
-        if SPLIT > 0:
-            sns.scatterplot(x=time_test[mask_test], y=y_test[mask_test], color='lightblue', label='Original test', s=100)
-        pred = time_test[window-1:]
-        pred_mask = mask_test[window-1:]
-        sns.scatterplot(x=pred[pred_mask], y=irr_test[pred_mask], color='deeppink', label='Predicted', s=100)
-        print(f"Loss for artificial gap from {gap[0]} to {gap[-1]} is {mean_squared_error(y_test[window-1:][pred_mask], irr_test[pred_mask])}")
-        plt.title(f"Predictions for artificial gap from {gap[0]} to {gap[-1]}")
-        plt.xlabel('TimeJD')
-        plt.ylabel('IrrB')
-        plt.legend()
-        plt.tight_layout()
-        plt.savefig(TARGET_PATH + f'gap_{i+1}.png')
+            plt.figure(figsize=(10, 4))
+            sns.scatterplot(x=time_train[mask_train], y=irr_train[mask_train], color='royalblue', label='Original train', s=100)
+            if SPLIT > 0:
+                sns.scatterplot(x=time_test[mask_test], y=y_test[mask_test], color='lightblue', label='Original test', s=100)
+            pred = time_test[window-1:]
+            pred_mask = mask_test[window-1:]
+            sns.scatterplot(x=pred[pred_mask], y=irr_test[pred_mask], color='deeppink', label='Predicted', s=100)
+            print(f"Loss for artificial gap from {gap[0]} to {gap[-1]} is {mean_squared_error(y_test[window-1:][pred_mask], irr_test[pred_mask])}")
+            plt.title(f"Predictions for artificial gap from {gap[0]} to {gap[-1]}")
+            plt.xlabel('TimeJD')
+            if DARA:
+                ax.set_ylabel('IrrB')
+            else:
+                ax.set_ylabel('CLARA radiance')
+            plt.legend()
+            plt.tight_layout()
+            plt.savefig(TARGET_PATH + f'gap_{i+1}.png')
 
 ################################################################################################
 

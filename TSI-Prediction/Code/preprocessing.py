@@ -23,7 +23,7 @@ IMAGE_PATH = '/Users/luca/Desktop/Internship/PMOD/TSI-Prediction/Images/' if DAR
 # Preprocessing:
 OUTLIER_UPPER = 1370
 OUTLIER_LOWER = 1356
-THRESHOLD = 3
+THRESHOLD = 3 if DARA else 100000
 # only use if combined_data includes at least 2021-2023 data and want to reproduce the DARA plot from the DS-lab paper
 paper_reproduction = False 
 
@@ -61,6 +61,7 @@ if missing_values.any():
     # Creating a fully clean dataset as well
     df_clean = df.dropna()
 else:
+    df_clean = df.copy()
     print("SANITY CHECK: No missing values found.")
 
 # Range Validation
@@ -123,10 +124,16 @@ else:
     deviation = abs(df['CLARA_radiance'].dropna() - rolling_median)
 # Eliminate outliers beyond threshold
 outliers_mask = deviation >= THRESHOLD
-original_length = len(df["IrrB"])
-outlier_mask_df = outliers_mask.to_frame().reset_index()
-outlier_indx = outlier_mask_df[outlier_mask_df['IrrB']]['index']
-noutlier_indx = outlier_mask_df[~outlier_mask_df['IrrB']]['index']
+if DARA:
+    original_length = len(df["IrrB"])
+    outlier_mask_df = outliers_mask.to_frame().reset_index()
+    outlier_indx = outlier_mask_df[outlier_mask_df['IrrB']]['index']
+    noutlier_indx = outlier_mask_df[~outlier_mask_df['IrrB']]['index']
+else:
+    original_length = len(df["CLARA_radiance"])
+    outlier_mask_df = outliers_mask.to_frame().reset_index()
+    outlier_indx = outlier_mask_df[outlier_mask_df['CLARA_radiance']]['index']
+    noutlier_indx = outlier_mask_df[~outlier_mask_df['CLARA_radiance']]['index']
 
 # Create a new DataFrame containing only the outliers
 outliers = df.drop(noutlier_indx, axis=0)
@@ -135,12 +142,19 @@ if len(outliers) > 0:
 
 # Remove the outliers from the original DataFrame
 df = df.drop(outlier_indx, axis=0)
-print(f'Removing: {original_length-len(df["IrrB"])} datapoints')
+if DARA:   
+    print(f'Removing: {original_length-len(df["IrrB"])} datapoints')
+else:
+    print(f'Removing: {original_length-len(df["CLARA_radiance"])} datapoints')
 
 # Create plots for visualizing the original data and outliers
 fig, axes = plt.subplots(2,1, figsize=(15, 8))
-sns.scatterplot(x=df["TimeJD"], y=df["IrrB"], ax = axes[0]).set(title=f'Scatterplot of IrrB Median - threshold: {THRESHOLD}')
-sns.scatterplot(x=outliers['TimeJD'], y=outliers['IrrB'], ax = axes[1], color='red' )
+if DARA:
+    sns.scatterplot(x=df["TimeJD"], y=df["CLARA_radiance"], ax = axes[0]).set(title=f'Scatterplot of IrrB Median - threshold: {THRESHOLD}')
+    sns.scatterplot(x=outliers['TimeJD'], y=outliers['CLARA_radiance'], ax = axes[1], color='red')
+else:
+    sns.scatterplot(x=df["TimeJD"], y=df["CLARA_radiance"], ax = axes[0]).set(title=f'Scatterplot of IrrB Median - threshold: {THRESHOLD}')
+    sns.scatterplot(x=outliers['TimeJD'], y=outliers['CLARA_radiance'], ax = axes[1], color='red')
 
 # Save plot in the desired folder
 plt.savefig(IMAGE_PATH + 'outlier_plot.png')
@@ -155,8 +169,12 @@ if paper_reproduction:
 ## GAP FINDING #################################################################################
 
 # Separate the data in train and test based on missing values
-df_train = df[df['IrrB'].notna()].copy()
-df_test = df[df['IrrB'].isna()].copy()
+if DARA:
+    df_train = df[df['IrrB'].notna()].copy()
+    df_test = df[df['IrrB'].isna()].copy()
+else:
+    df_train = df[df['CLARA_radiance'].notna()].copy()
+    df_test = df[df['CLARA_radiance'].isna()].copy()
 
 # Set minimum treshold to fill and find gaps bigger than that
 gap_threshold = pd.Timedelta(days=1)
@@ -173,8 +191,12 @@ df_test.set_index('TimeJD', inplace=True)
 df_resampled = df.resample(time_interval).mean().copy()
 
 # Drop NAs due to the averaging
-df_resampled.dropna(subset=df_test.columns.difference(['IrrB']), inplace=True)
-df_test = df_resampled[df_resampled['IrrB'].isna()].copy()
+if DARA:
+    df_resampled.dropna(subset=df_test.columns.difference(['IrrB']), inplace=True)
+    df_test = df_resampled[df_resampled['IrrB'].isna()].copy()
+else:
+    df_resampled.dropna(subset=df_test.columns.difference(['CLARA_radiance']), inplace=True)
+    df_test = df_resampled[df_resampled['CLARA_radiance'].isna()].copy()
 
 # Select the desired rows
 sampled_rows = pd.DataFrame()

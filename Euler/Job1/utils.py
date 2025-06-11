@@ -28,7 +28,7 @@ def read_pickle(file_path):
         print("File not found.")
         return []
 
-def create_gap_train_test_split(gap, period, data_path, date = None, impute = False, mode = None):
+def create_gap_train_test_split(gap, period, data_path, date = None, impute = False, mode = None, DARA = True):
     '''Function to create a train- and testdataset for gapfilling. For entire dataset with gaps ranging from 1 to 6 days use
     gap = -1, period = -1, and the respective datapath
     Inputs:
@@ -38,6 +38,7 @@ def create_gap_train_test_split(gap, period, data_path, date = None, impute = Fa
         date: date of the center which should be predicted
         impute: indicates if measured housekeeping data should be feeded into the model or values should be imputed
         mode: indicates the mode of imputation ('mean' or 'median')
+        DARA: indicates if the data concerns the DARA instrument
     Output:
         X_train, y_train: Training data
         X_test, y_test: Test data
@@ -64,7 +65,10 @@ def create_gap_train_test_split(gap, period, data_path, date = None, impute = Fa
         train = masked_data[~test_mask]
         if impute:
             mask_comb = mask_before | mask_after
-            cols = [col for col in train.columns if not col in ['IrrB','TimeJD']]
+            if DARA:
+                cols = [col for col in train.columns if not col in ['IrrB','TimeJD']]
+            else:
+                cols = [col for col in train.columns if not col in ['CLARA_radiance','TimeJD']]
             selected = train.loc[mask_comb, cols]
             if mode == 'mean':
                 values = selected.mean()
@@ -96,7 +100,10 @@ def create_gap_train_test_split(gap, period, data_path, date = None, impute = Fa
                 test.append(masked_data[test_mask])
             else:
                 mask_comb = mask_before | mask_after
-                cols = [col for col in masked_data[~test_mask].columns if not col in ['IrrB','TimeJD']]
+                if DARA:
+                    cols = [col for col in masked_data[~test_mask].columns if not col in ['IrrB','TimeJD']]
+                else:
+                    cols = [col for col in masked_data[~test_mask].columns if not col in ['CLARA_radiance','TimeJD']]
                 selected = masked_data[~test_mask].loc[mask_comb, cols]
                 if mode == 'mean':
                     values = selected.mean()
@@ -113,10 +120,16 @@ def create_gap_train_test_split(gap, period, data_path, date = None, impute = Fa
     else:
         raise ValueError("Choose valid gap length and reconstruction period.")
     
-    X_train = train.drop(['IrrB'], axis = 1)
-    y_train = train['IrrB']
-    X_test = test.drop(['IrrB'], axis = 1)
-    y_test = test['IrrB']
+    if DARA:
+        X_train = train.drop(['IrrB'], axis = 1)
+        y_train = train['IrrB']
+        X_test = test.drop(['IrrB'], axis = 1)
+        y_test = test['IrrB']
+    else:
+        X_train = train.drop(['CLARA_radiance'], axis = 1)
+        y_train = train['CLARA_radiance']
+        X_test = test.drop(['CLARA_radiance'], axis = 1)
+        y_test = test['CLARA_radiance']
     return X_train, X_test, y_train, y_test
 
 def get_mask(median_date, window, data, even):

@@ -19,21 +19,25 @@ from PatchTST import PTST
 from types import SimpleNamespace
 
 ## HYPERPARAMETER ################################################################################
-PATH_TRAIN = '/cluster/home/baumannlu/Data/df_train_2021_to_2024.pkl'
-PATH_TEST = '/cluster/home/baumannlu/Data/df_test_2021_to_2024.pkl'
-TARGET_PATH = '/cluster/home/baumannlu/Models/Job1/'
+DARA = False
+PATH_TRAIN = '/Users/luca/Desktop/Internship/PMOD/TSI-Prediction/Data/df_train.pkl' if DARA else '/Users/luca/Desktop/Internship/PMOD/TSI-Prediction/Data/CLARA_df_train.pkl'
+PATH_TEST = '/Users/luca/Desktop/Internship/PMOD/TSI-Prediction/Data/df_test.pkl' if DARA else '/Users/luca/Desktop/Internship/PMOD/TSI-Prediction/Data/CLARA_df_test.pkl'
+TARGET_PATH = '/Users/luca/Desktop/Internship/PMOD/TSI-Prediction/Models/'
 # Setting SPLIT = 0 is equivalent to training on the full data available and filling in the found gaps
 SPLIT = 0.2
 
 # Network hyperparameters
-time_features = True
-input_size = 24 if not time_features else 29
+time_features = False
+if DARA:
+    input_size = 24 if not time_features else 29
+else:
+    input_size = 58 if not time_features else 63
 hidden_size = 128 # 128
 output_size = 1
 learning_rate = 3e-3
 num_epochs = 100 # 100
 dropout = 0
-num_layers = 3 # 3
+num_layers = 2 # 3
 bidirectional = False
 gap_filling = True
 lstm = True
@@ -45,6 +49,8 @@ months = -1
 train_loss = True
 plot_train = False
 
+assert (lstm + ff + tcn) <= 1
+
 ################################################################################################
 
 ## READ-IN #####################################################################################
@@ -55,13 +61,17 @@ np.random.seed(42)
 
 # generate train test split if specified or use new test data
 df_train = pd.read_pickle(PATH_TRAIN)
-X_train = df_train.drop(['IrrB'], axis = 1)  # Features for training
-y_train = df_train['IrrB'] # Target
+if DARA:
+    X_train = df_train.drop(['IrrB'], axis = 1)  # Features for training
+    y_train = df_train['IrrB'] # Target
+else:
+    X_train = df_train.drop(['CLARA_radiance'], axis = 1)  # Features for training
+    y_train = df_train['CLARA_radiance'] # Target
 
 if SPLIT > 0:
     # Assuming a time-based split
     if gap_filling:
-        X_train, X_test, y_train, y_test = create_gap_train_test_split(gap,months,PATH_TRAIN)
+        X_train, X_test, y_train, y_test = create_gap_train_test_split(gap,months,PATH_TRAIN,DARA=DARA)
     else:
         X_train, X_test, y_train, y_test = train_test_split(X_train, y_train, test_size=0.2, random_state=42, shuffle=False)
     if time_features:
@@ -84,7 +94,10 @@ else:
         X_train['day'], df_test['day'] = train_dt.dt.day, test_dt.dt.day
         X_train['hour'], df_test['hour'] = train_dt.dt.hour, test_dt.dt.hour
         X_train['minute'], df_test['minute'] = train_dt.dt.minute, test_dt.dt.minute
-    X_test = df_test.drop(['IrrB', 'TimeJD'], axis = 1) # Features for gaps
+    if DARA:
+        X_test = df_test.drop(['IrrB', 'TimeJD'], axis = 1) # Features for gaps
+    else: 
+        X_test = df_test.drop(['CLARA_radiance', 'TimeJD'], axis = 1) # Features for gaps
     time_train = np.array(df_train['TimeJD'])
     time_test = np.array(df_test['TimeJD'])
     X_train = X_train.drop('TimeJD', axis = 1)
@@ -346,7 +359,7 @@ sns.scatterplot(x = time_train, y = irr_train,  color = 'royalblue', label='Orig
 if SPLIT > 0:
     sns.scatterplot(x = time_test, y = y_test, color='lightblue', label='Original test', s = 50)
 if plot_train and train_loss:
-    sns.scatterplot(x=time_train[window-1:], y=train_predictions.ravel(), color='gold', label='Predicted train', s=50)
+    sns.scatterplot(x=time_train[window-1:], y=train_predictions.ravel(), color='deeppink', label='Predicted train', s=50)
 sns.scatterplot(x = time_test[window-1:], y = irr_test, color='deeppink', label='Predicted', s = 50)
 
 # Add title and legend
@@ -382,7 +395,10 @@ if gap == -1:
         sns.scatterplot(x = pred[pred_mask], y = irr_test[pred_mask], color='deeppink', label='Predicted', s = 50, ax = ax)
         ax.set_title(f'Predictions for {hy}', fontsize=20)
         ax.set_xlabel('TimeJD')
-        ax.set_ylabel('IrrB')
+        if DARA:
+            ax.set_ylabel('IrrB')
+        else:
+            ax.set_ylabel('CLARA radiance')
         ax.legend()
 
     plt.tight_layout()
