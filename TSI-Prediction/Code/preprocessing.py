@@ -13,10 +13,12 @@ import time as t
 t0 = t.time()
 
 # Read-in:
-PATH_DATA = '/Users/luca/Desktop/Internship/PMOD/TSI-Prediction/Data/combined_data.pkl'
-PATH_FEATURES = '/Users/luca/Desktop/Internship/PMOD/TSI-Prediction/Data/combined_data.pkl'
-TARGET_PATH = '/Users/luca/Desktop/Internship/PMOD/TSI-Prediction/Data/'
-IMAGE_PATH = '/Users/luca/Desktop/Internship/PMOD/TSI-Prediction/Images/'
+DARA = False
+
+PATH_DATA = '/Users/luca/Desktop/Internship/PMOD/TSI-Prediction/Data/combined_data.pkl' if DARA else '/Users/luca/Desktop/Internship/PMOD/TSI-Prediction/Data/CLARA_combined_all.pkl'
+PATH_FEATURES = '/Users/luca/Desktop/Internship/PMOD/TSI-Prediction/Data/combined_data.pkl' if DARA else '/Users/luca/Desktop/Internship/PMOD/TSI-Prediction/Data/CLARA_combined_all.pkl'
+TARGET_PATH = '/Users/luca/Desktop/Internship/PMOD/TSI-Prediction/Data/' if DARA else '/Users/luca/Desktop/Internship/PMOD/TSI-Prediction/Data/CLARA_'
+IMAGE_PATH = '/Users/luca/Desktop/Internship/PMOD/TSI-Prediction/Images/' if DARA else '/Users/luca/Desktop/Internship/PMOD/TSI-Prediction/Images/CLARA_'
 
 # Preprocessing:
 OUTLIER_UPPER = 1370
@@ -50,7 +52,10 @@ df = df.sort_values(by=['TimeJD'])
 missing_values = df.isnull().sum()
 if missing_values.any():
     print("Warning: Missing values found. Handling missing values if not in IrrB...")
-    columns = df.columns[df.columns != 'IrrB']
+    if DARA:
+        columns = df.columns[df.columns != 'IrrB']
+    else:
+        columns = df.columns[df.columns != 'CLARA_radiance']
     # Deleting rows with missing values (do not consider IrrB in light of gap filling)
     df = df.dropna(subset=columns)
     # Creating a fully clean dataset as well
@@ -60,11 +65,12 @@ else:
 
 # Range Validation
 # Assuming IrrB should be within [OUTLIER_LOWER, OUTLIER_UPPER] range
-out_of_range_indices = df[(df['IrrB'] < OUTLIER_LOWER) | (df['IrrB'] > OUTLIER_UPPER)].index
-if not out_of_range_indices.empty:
-    print("Warning: Values outside expected range found. Handling out-of-range values...")
-    # Handling out-of-range values
-    df = df[((df['IrrB']<OUTLIER_UPPER) & (df['IrrB']>OUTLIER_LOWER)) | df['IrrB'].isna()]
+if DARA: 
+    out_of_range_indices = df[(df['IrrB'] < OUTLIER_LOWER) | (df['IrrB'] > OUTLIER_UPPER)].index
+    if not out_of_range_indices.empty:
+        print("Warning: Values outside expected range found. Handling out-of-range values...")
+        # Handling out-of-range values
+        df = df[((df['IrrB']<OUTLIER_UPPER) & (df['IrrB']>OUTLIER_LOWER)) | df['IrrB'].isna()]
 
 # Unique Values
 duplicates = df.duplicated()
@@ -109,9 +115,12 @@ df.reset_index(inplace=True)
 
 # Set the size of the rolling window for calculating the median and compute median and deviation
 window_size = 5
-rolling_median = df['IrrB'].dropna().rolling(window=window_size).median()
-deviation = abs(df['IrrB'].dropna() - rolling_median)
-
+if DARA:
+    rolling_median = df['IrrB'].dropna().rolling(window=window_size).median()
+    deviation = abs(df['IrrB'].dropna() - rolling_median)
+else: 
+    rolling_median = df['CLARA_radiance'].dropna().rolling(window=window_size).median()
+    deviation = abs(df['CLARA_radiance'].dropna() - rolling_median)
 # Eliminate outliers beyond threshold
 outliers_mask = deviation >= THRESHOLD
 original_length = len(df["IrrB"])

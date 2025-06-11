@@ -20,29 +20,29 @@ from types import SimpleNamespace
 
 ## HYPERPARAMETER ################################################################################
 
-PATH_TRAIN = '/Users/luca/Desktop/Internship/PMOD/TSI-Prediction/Data/df_train_2021_to_2023.pkl'
+PATH_TRAIN = '/Users/luca/Desktop/Internship/PMOD/TSI-Prediction/Data/Other/df_train_2021_to_2023_old.pkl'
 PATH_TEST = '/Users/luca/Desktop/Internship/PMOD/TSI-Prediction/Data/df_test_2021_to_2023_postprocessed_mean.pkl'
 TARGET_PATH = '/Users/luca/Desktop/Internship/PMOD/TSI-Prediction/Models/'
 # Setting SPLIT = 0 is equivalent to training on the full data available and filling in the found gaps
 SPLIT = 0.2
 
 # Network hyperparameters
-time_features = True
+time_features = False
 input_size = 24 if not time_features else 29
 hidden_size = 128 # 128
 output_size = 1
 learning_rate = 3e-3
-num_epochs = 1 # 100
+num_epochs = 100 # 100
 dropout = 0
-num_layers = 2 # 3
-bidirectional = False
+num_layers = 5 # 3
+bidirectional = True
 gap_filling = True
 lstm = False
-ff = True
+ff = False
 tcn = False
 window = 16 # 16
-gap = -1
-months = -1
+gap = 1
+months = 1
 train_loss = True
 plot_train = False
 
@@ -347,7 +347,7 @@ sns.scatterplot(x = time_train, y = irr_train,  color = 'royalblue', label='Orig
 if SPLIT > 0:
     sns.scatterplot(x = time_test, y = y_test, color='lightblue', label='Original test', s = 50)
 if plot_train and train_loss:
-    sns.scatterplot(x=time_train[window-1:], y=train_predictions.ravel(), color='gold', label='Predicted train', s=50)
+    sns.scatterplot(x=time_train[window-1:], y=train_predictions.ravel(), color='deeppink', label='Predicted train', s=50)
 sns.scatterplot(x = time_test[window-1:], y = irr_test, color='deeppink', label='Predicted', s = 50)
 
 # Add title and legend
