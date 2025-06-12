@@ -20,11 +20,11 @@ from PatchTST import PTST
 from types import SimpleNamespace
 
 ## HYPERPARAMETER ################################################################################
-DARA = True
-PATH_TRAIN = '/Users/luca/Desktop/Internship/PMOD/TSI-Prediction/Data/df_train_2021_to_2023.pkl'
-PATH_TEST = '/Users/luca/Desktop/Internship/PMOD/TSI-Prediction/Data/df_test_2021_to_2023_postprocessed_mean.pkl'
+DARA = False
+PATH_TRAIN = '/Users/luca/Desktop/Internship/PMOD/TSI-Prediction/Data/CLARA_df_train.pkl'
+PATH_TEST = '/Users/luca/Desktop/Internship/PMOD/TSI-Prediction/Data/CLARA_df_test.pkl'
 TARGET_PATH = '/Users/luca/Desktop/Internship/PMOD/TSI-Prediction/Models/'
-MODEL_PATH = '/Users/luca/Desktop/Internship/PMOD/TSI-Prediction/Models/BILSTM_2021_to_2023_time_feat_best.pt'
+MODEL_PATH = '/Users/luca/Desktop/Internship/PMOD/TSI-Prediction/Models/trained_model.pt'
 # Setting SPLIT = 0 is equivalent to training on the full data available and filling in the found gaps
 SPLIT = 0.2
 
@@ -33,12 +33,12 @@ time_features = True
 if DARA:
     input_size = 24 if not time_features else 29
 else:
-    input_size = 58 if not time_features else 63
+    input_size = 56 if not time_features else 61
 hidden_size = 128 # 128
 output_size = 1
 dropout = 0
-num_layers = 2
-bidirectional = True
+num_layers = 1
+bidirectional = False
 gap_filling = True
 lstm = True
 ff = False

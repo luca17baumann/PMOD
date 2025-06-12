@@ -14,6 +14,9 @@ PATH_POS = '/Users/luca/Desktop/Internship/PMOD/TSI-Prediction/Data/CLARA OLR/Po
 PATH_HOUSEKEEPING = '/Users/luca/Desktop/Internship/PMOD/TSI-Prediction/Data/CLARA_combined_data.pkl'
 PATH_TARGET = '/Users/luca/Desktop/Internship/PMOD/TSI-Prediction/Data/CLARA_OLR_combined.pkl'
 PATH_OUT = '/Users/luca/Desktop/Internship/PMOD/TSI-Prediction/Data/CLARA_combined_all.pkl'
+PATH_HIST = '/Users/luca/Desktop/Internship/PMOD/TSI-Prediction/Images/CLARA_histogram.png'
+angle = 50
+histogram = True
 
 t0 = t.time()
 
@@ -66,6 +69,19 @@ feat = house_df.columns
 house_df = house_df.sort_values(by='TimeJD')
 df_merged = pd.merge_asof(house_df, df, left_on='TimeJD', right_on='CLARA_OLR_time', direction = 'nearest')
 df_merged = df_merged.drop('CLARA_OLR_time', axis=1)
+mask = (df_merged['CLARA_solar_zenith_angle'] > 120)
+df_merged = df_merged[mask]
+if histogram:
+    tmp = df_merged['CLARA_radiance']
+    mask1 = tmp < 1000
+    mask2 = tmp > -100
+    plt.figure(figsize=(8, 4))
+    plt.hist(tmp[mask1 & mask2].dropna(), bins=50, color='skyblue', edgecolor='black')
+    plt.xlabel('CLARA_radiance')
+    plt.ylabel('Frequency')
+    plt.title('Histogram of CLARA radiance')
+    plt.tight_layout()
+    plt.savefig(PATH_HIST)
 df_merged.to_pickle(PATH_OUT)
 t1 = t.time()
 

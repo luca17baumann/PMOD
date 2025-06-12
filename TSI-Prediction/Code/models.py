@@ -27,17 +27,17 @@ TARGET_PATH = '/Users/luca/Desktop/Internship/PMOD/TSI-Prediction/Models/'
 SPLIT = 0.2
 
 # Network hyperparameters
-time_features = False
+time_features = True
 if DARA:
     input_size = 24 if not time_features else 29
 else:
-    input_size = 58 if not time_features else 63
+    input_size = 56 if not time_features else 61
 hidden_size = 128 # 128
 output_size = 1
 learning_rate = 3e-3
-num_epochs = 100 # 100
+num_epochs = 35 # 100
 dropout = 0
-num_layers = 2 # 3
+num_layers = 1 # 3
 bidirectional = False
 gap_filling = True
 lstm = True

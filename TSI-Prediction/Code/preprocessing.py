@@ -21,9 +21,9 @@ TARGET_PATH = '/Users/luca/Desktop/Internship/PMOD/TSI-Prediction/Data/' if DARA
 IMAGE_PATH = '/Users/luca/Desktop/Internship/PMOD/TSI-Prediction/Images/' if DARA else '/Users/luca/Desktop/Internship/PMOD/TSI-Prediction/Images/CLARA_'
 
 # Preprocessing:
-OUTLIER_UPPER = 1370
-OUTLIER_LOWER = 1356
-THRESHOLD = 3 if DARA else 100000
+OUTLIER_UPPER = 1370 if DARA else 600
+OUTLIER_LOWER = 1356 if DARA else -100
+THRESHOLD = 3 if DARA else 238 
 # only use if combined_data includes at least 2021-2023 data and want to reproduce the DARA plot from the DS-lab paper
 paper_reproduction = False 
 
@@ -66,12 +66,17 @@ else:
 
 # Range Validation
 # Assuming IrrB should be within [OUTLIER_LOWER, OUTLIER_UPPER] range
-if DARA: 
+if DARA:
     out_of_range_indices = df[(df['IrrB'] < OUTLIER_LOWER) | (df['IrrB'] > OUTLIER_UPPER)].index
-    if not out_of_range_indices.empty:
-        print("Warning: Values outside expected range found. Handling out-of-range values...")
-        # Handling out-of-range values
+else: 
+    out_of_range_indices = df[(df['CLARA_radiance'] < OUTLIER_LOWER) | (df['CLARA_radiance'] > OUTLIER_UPPER)].index
+if not out_of_range_indices.empty:
+    print("Warning: Values outside expected range found. Handling out-of-range values...")
+    # Handling out-of-range values
+    if DARA:
         df = df[((df['IrrB']<OUTLIER_UPPER) & (df['IrrB']>OUTLIER_LOWER)) | df['IrrB'].isna()]
+    else:
+        df = df[((df['CLARA_radiance']<OUTLIER_UPPER) & (df['CLARA_radiance']>OUTLIER_LOWER)) | df['CLARA_radiance'].isna()]
 
 # Unique Values
 duplicates = df.duplicated()
@@ -115,7 +120,7 @@ plt.savefig(IMAGE_PATH + 'correlation_plot.png')
 df.reset_index(inplace=True)
 
 # Set the size of the rolling window for calculating the median and compute median and deviation
-window_size = 5
+window_size = 5 if DARA else 50
 if DARA:
     rolling_median = df['IrrB'].dropna().rolling(window=window_size).median()
     deviation = abs(df['IrrB'].dropna() - rolling_median)
