@@ -31,7 +31,7 @@ time_features = True
 if DARA:
     input_size = 24 if not time_features else 29
 else:
-    input_size = 56 if not time_features else 61
+    input_size = 56 if not time_features else 61 # needs to be adapted if additional CLARA features are included or features are excluded
 hidden_size = 128 # 128
 output_size = 1
 learning_rate = 3e-3

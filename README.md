@@ -42,6 +42,7 @@ pip install -r requirements.txt
         ```
     Afterwards the merged file can be split into train and test datasets for model training. Input is the previously constructed pickle file and output are 2 pickle files for the training and test data. 
     - In the file 'preprocessing.py' set:
+        - DARA = True
         - PATH_DATA, PATH_FEATURES, TARGET_PATH, IMAGE_PATH to the desired path
     - Run the file: 
         ```sh
@@ -49,6 +50,7 @@ pip install -r requirements.txt
         ```
     To fill the gaps in the data the test dataset needs to be imputed. Input is the previously constructed test data pickle file and output is a new imputed test pickle file.
     - In the file 'postprocessing.py' set:
+        - Dara = True
         - PATH_TRAIN, PATH_TEST, TARGET_PATH to the desired path
         - mode to the desired imputation mode
         - amount to 'first' to use the same amount of timepoints for all gap predictions, 'day before' to predict at the same hour and minute points as the day before the gap
@@ -59,6 +61,7 @@ pip install -r requirements.txt
 2. Train the model:
     Inputs are the train and test pickle files and outputs are a trained model, two plots of the models' predictions and a plot of the train loss. 
     - In the file 'models.py' set:
+        - DARA = True
         - PATH_TRAIN, PATH_TEST, TARGET_PATH to the desired path
         - SPLIT = 0 to train in the entire train dataset (no validation data) and SPLIT > 0 to artificially produce gaps for validation and compute prediction losses
         - time_features = True to include year, month, day, hour and minute as features for model training

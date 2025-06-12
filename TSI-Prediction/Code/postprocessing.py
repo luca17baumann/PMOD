@@ -11,6 +11,7 @@ from sklearn.experimental import enable_iterative_imputer
 from sklearn.impute import KNNImputer, IterativeImputer
 
 ## HYPERPARAMETER ################################################################################
+DARA = True
 
 PATH_TRAIN = '/Users/luca/Desktop/Internship/PMOD/TSI-Prediction/Data/df_train.pkl'
 PATH_TEST = '/Users/luca/Desktop/Internship/PMOD/TSI-Prediction/Data/df_test.pkl'
@@ -80,7 +81,10 @@ for i in range(len(gap_dict)):
     mask_after = df_train['TimeJD'].dt.date.isin([date_after])
     mask_combined = mask_before | mask_after
     # Calculate mean or median for each feature 
-    feature_cols = [col for col in df_train.columns if col not in ['IrrB', 'TimeJD']]
+    if DARA: 
+        feature_cols = [col for col in df_train.columns if col not in ['IrrB', 'TimeJD']]
+    else:
+        feature_cols = [col for col in df_train.columns if col not in ['CLARA_radiance', 'TimeJD']]
     selected_rows = df_train.loc[mask_combined, feature_cols]
     if mode == 'mean':
         feature_values = selected_rows.mean()
@@ -104,7 +108,10 @@ for i in range(len(gap_dict)):
                 times = df_train.loc[mask, 'TimeJD']
             for t in times:
                 row = feature_values.to_dict()
-                row['IrrB'] = np.nan
+                if DARA:
+                    row['IrrB'] = np.nan
+                else:
+                    row['CLARA_radiance'] = np.nan
                 time_part = pd.to_datetime(t).time()
                 row['TimeJD'] = pd.Timestamp(datetime.combine(pd.Timestamp(gap_date), time_part))
                 new_rows.append(row)
@@ -117,7 +124,10 @@ if 'impute' in mode:
     df = pd.concat([df_train, df_test], ignore_index=True)
     numeric_cols = df.columns.tolist()
     # Exclude 'IrrB' from imputation
-    numeric_cols = [col for col in numeric_cols if (col != 'IrrB' and col != 'TimeJD')]
+    if DARA:
+        numeric_cols = [col for col in numeric_cols if (col != 'IrrB' and col != 'TimeJD')]
+    else: 
+        numeric_cols = [col for col in numeric_cols if (col != 'CLARA_radiance' and col != 'TimeJD')]
     for col in numeric_cols:
         df[col] = pd.to_numeric(df[col], errors='coerce')
     tmp = df[numeric_cols]
