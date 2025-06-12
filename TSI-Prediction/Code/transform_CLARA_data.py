@@ -15,7 +15,7 @@ PATH_HOUSEKEEPING = '/Users/luca/Desktop/Internship/PMOD/TSI-Prediction/Data/CLA
 PATH_TARGET = '/Users/luca/Desktop/Internship/PMOD/TSI-Prediction/Data/CLARA_OLR_combined.pkl'
 PATH_OUT = '/Users/luca/Desktop/Internship/PMOD/TSI-Prediction/Data/CLARA_combined_all.pkl'
 PATH_HIST = '/Users/luca/Desktop/Internship/PMOD/TSI-Prediction/Images/CLARA_histogram.png'
-angle = 50
+angle = 120
 histogram = True
 
 t0 = t.time()
@@ -69,7 +69,7 @@ feat = house_df.columns
 house_df = house_df.sort_values(by='TimeJD')
 df_merged = pd.merge_asof(house_df, df, left_on='TimeJD', right_on='CLARA_OLR_time', direction = 'nearest')
 df_merged = df_merged.drop('CLARA_OLR_time', axis=1)
-mask = (df_merged['CLARA_solar_zenith_angle'] > 120)
+mask = (df_merged['CLARA_solar_zenith_angle'] > angle)
 df_merged = df_merged[mask]
 if histogram:
     tmp = df_merged['CLARA_radiance']
